@@ -77,7 +77,7 @@ export function CustomerLayout() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-md px-4 py-4 pb-32 sm:max-w-4xl sm:px-6">
+      <main className="relative z-10 mx-auto w-full max-w-md px-4 py-4 pb-20 sm:max-w-4xl sm:px-6">
         <Outlet />
       </main>
 

@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, getDoc, deleteField, query, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from './firebase';
-import { NORMAL_COCKTAIL_COLOR_VALUES, isFoodCategory, isNormalCocktailCategory } from './orderUtils';
+import { NORMAL_COCKTAIL_COLOR_VALUES } from './orderUtils';
 
 export type UserRole = 'customer' | 'staff' | 'cast' | 'admin' | 'pending';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -494,10 +494,6 @@ const stripRecipeFields = (product: Product): Product => {
   delete publicProduct.notes;
   delete publicProduct.recommendationText;
   return publicProduct;
-};
-
-const canStorePrivateRecipe = (category?: string | null) => {
-  return !isNormalCocktailCategory(category) && !isFoodCategory(category);
 };
 
 const hasRecipePayload = (recipeText?: string, notes?: string, recommendationText?: string) => {
@@ -1180,7 +1176,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     const { recipeText, notes, recommendationText, ...publicProductData } = productData;
     const newProduct: Product = { ...publicProductData, id, updatedAt: new Date() };
     await setDoc(doc(db, 'products', id), newProduct);
-    if (canStorePrivateRecipe(String(productData.category)) && hasRecipePayload(recipeText, notes, recommendationText)) {
+    if (hasRecipePayload(recipeText, notes, recommendationText)) {
       await setDoc(
         doc(db, 'productRecipes', id),
         buildProductRecipePayload(id, newProduct, recipeText, notes, recommendationText, currentUser?.id),
@@ -1208,7 +1204,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     if ('notes' in updates) productPatch.notes = deleteField();
     if ('recommendationText' in updates) productPatch.recommendationText = deleteField();
     await updateDoc(doc(db, 'products', productId), productPatch);
-    if (canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
+    if (hasRecipeFieldUpdate) {
       const nextRecipeText = recipeText ?? productRecipes[productId]?.recipeText ?? existingProduct?.recipeText ?? '';
       const nextNotes = notes ?? productRecipes[productId]?.notes ?? existingProduct?.notes ?? '';
       const nextRecommendationText = recommendationText ?? productRecipes[productId]?.recommendationText ?? existingProduct?.recommendationText ?? '';
@@ -1216,26 +1212,28 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
         name: String(updates.name ?? existingProduct?.name ?? ''),
         category: nextCategory,
       };
-      await setDoc(
-        doc(db, 'productRecipes', productId),
-        buildProductRecipePayload(productId, recipeProduct, nextRecipeText, nextNotes, nextRecommendationText, currentUser?.id),
-        { merge: true },
-      );
-      setProductRecipes(current => ({
-        ...current,
-        [productId]: {
-          recipeText: nextRecipeText,
-          notes: nextNotes,
-          recommendationText: nextRecommendationText,
-        },
-      }));
-    } else if (!canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
-      await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
-      setProductRecipes(current => {
-        const next = { ...current };
-        delete next[productId];
-        return next;
-      });
+      if (hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
+        await setDoc(
+          doc(db, 'productRecipes', productId),
+          buildProductRecipePayload(productId, recipeProduct, nextRecipeText, nextNotes, nextRecommendationText, currentUser?.id),
+          { merge: true },
+        );
+        setProductRecipes(current => ({
+          ...current,
+          [productId]: {
+            recipeText: nextRecipeText,
+            notes: nextNotes,
+            recommendationText: nextRecommendationText,
+          },
+        }));
+      } else {
+        await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
+        setProductRecipes(current => {
+          const next = { ...current };
+          delete next[productId];
+          return next;
+        });
+      }
     }
   };
   

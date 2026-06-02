@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ChevronUp, X } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import type { RoleNavItem } from '../../hooks/useRoleNavigation';
 
@@ -24,7 +24,7 @@ export function CollapsibleBottomNav({ items, rootPath }: CollapsibleBottomNavPr
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') collapse();
     };
-    const timer = window.setTimeout(collapse, 7000);
+    const timer = window.setTimeout(collapse, 5000);
     window.addEventListener('scroll', collapse, { passive: true });
     window.addEventListener('keydown', handleKeyDown);
 
@@ -43,34 +43,26 @@ export function CollapsibleBottomNav({ items, rootPath }: CollapsibleBottomNavPr
   };
 
   const activeItem = items.find(isItemActive) || items[0];
-  const ActiveIcon = activeItem.icon;
 
   return (
     <footer className="fixed inset-x-0 bottom-0 z-50 px-3 pb-safe pointer-events-none">
-      <div className="mx-auto flex max-w-md justify-center sm:max-w-xl">
+      <div className={cn('mx-auto flex max-w-md sm:max-w-xl', isExpanded ? 'justify-center' : 'justify-start')}>
         <div
           className={cn(
-            'pointer-events-auto w-full overflow-hidden border border-white/10 bg-[#080b12]/88 shadow-[0_20px_60px_rgba(0,0,0,0.65)] backdrop-blur-2xl transition-all duration-300',
-            isExpanded ? 'rounded-[28px] p-2' : 'max-w-[260px] rounded-[24px] p-1.5',
+            'pointer-events-auto overflow-hidden border border-white/10 bg-[#080b12]/88 shadow-[0_20px_60px_rgba(0,0,0,0.65)] backdrop-blur-2xl transition-all duration-300',
+            isExpanded ? 'w-full rounded-[28px] p-2' : 'w-auto rounded-full p-1',
           )}
         >
           {!isExpanded ? (
             <button
               type="button"
               onClick={() => setIsExpanded(true)}
-              className="flex min-h-[54px] w-full items-center justify-between gap-3 rounded-[20px] border border-[#d4af37]/25 bg-[#d4af37]/10 px-3 text-left text-white active:scale-[0.98]"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-[#d4af37]/25 bg-[#d4af37]/10 text-[#d4af37] opacity-70 transition hover:opacity-100 active:scale-[0.94]"
               aria-label="ナビゲーションを開く"
+              title={activeItem.label}
             >
-              <span className="flex min-w-0 items-center gap-2">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#d4af37] text-black">
-                  <ActiveIcon size={20} />
-                </span>
-                <span className="min-w-0">
-                  <span className="block truncate text-[10px] font-black uppercase tracking-[0.18em] text-[#d4af37]">NAV</span>
-                  <span className="block truncate text-sm font-black">{activeItem.label}</span>
-                </span>
-              </span>
-              <ChevronUp size={19} className="shrink-0 text-[#d4af37]" />
+              <Menu size={20} />
+              <span className="sr-only">{activeItem.label}</span>
             </button>
           ) : (
             <div className="space-y-2">

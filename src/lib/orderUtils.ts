@@ -12,18 +12,8 @@ export type NormalCocktailColor = (typeof NORMAL_COCKTAIL_COLORS)[number]['value
 
 export const NORMAL_COCKTAIL_COLOR_VALUES = NORMAL_COCKTAIL_COLORS.map(color => color.value);
 
-export const isNormalCocktailCategory = (category?: string | null) => {
-  const value = category || '';
-  return value.includes('通常') || value.includes('普通') || value.includes('ノーマル');
-};
-
-export const isFoodCategory = (category?: string | null) => {
-  return (category || '').includes('フード');
-};
-
 export const canShowRecipeForProduct = (product?: Pick<Product, 'category' | 'recipeText'> | null) => {
-  if (!product?.recipeText?.trim()) return false;
-  return !isNormalCocktailCategory(product.category) && !isFoodCategory(product.category);
+  return Boolean(product?.recipeText?.trim());
 };
 
 export const formatNormalCocktailOptions = (item: Pick<OrderItem, 'color1' | 'color2' | 'hasSoda'>) => {

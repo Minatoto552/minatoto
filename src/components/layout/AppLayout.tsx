@@ -166,7 +166,7 @@ export function AppLayout() {
         </div>
       </header>
 
-      <main className="relative z-10 mx-auto w-full max-w-md px-4 py-4 pb-32 sm:max-w-5xl sm:px-6 lg:px-8">
+      <main className="relative z-10 mx-auto w-full max-w-md px-4 py-4 pb-20 sm:max-w-5xl sm:px-6 lg:px-8">
         <Outlet />
       </main>
 

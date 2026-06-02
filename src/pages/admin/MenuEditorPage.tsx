@@ -2,15 +2,13 @@ import React, { useState } from 'react';
 import { useMockApp, CATEGORIES, Product } from '../../lib/MockAppContext';
 import { Plus, Edit2, Trash2, Eye, EyeOff, Save, X, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { isFoodCategory, isNormalCocktailCategory } from '../../lib/orderUtils';
-
-const canAttachRecipeToCategory = (category: string) => !isNormalCocktailCategory(category) && !isFoodCategory(category);
 
 export function MenuEditorPage() {
   const { products, addProduct, updateProduct, deleteProduct, users, currentUser } = useMockApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
   
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
     name: '',
@@ -74,18 +72,13 @@ export function MenuEditorPage() {
   };
 
   const saveProduct = async () => {
+    if (isSaving) return;
     if (!formData.name) return showToast('商品名は必須です', true);
-    const canAttachRecipe = canAttachRecipeToCategory(String(formData.category));
     if (formData.category === 'キャストオリジナルカクテル' && !formData.recipeText?.trim()) {
       return showToast('オリジナルカクテルにはレシピ本文を入力してください', true);
     }
     
     const finalData = { ...formData };
-    if (!canAttachRecipe) {
-      finalData.recipeText = '';
-      finalData.notes = '';
-      finalData.recommendationText = '';
-    }
     if (finalData.category !== 'キャストオリジナルカクテル') {
       finalData.isCastOriginal = false;
       finalData.castId = '';
@@ -94,6 +87,7 @@ export function MenuEditorPage() {
     }
 
     try {
+      setIsSaving(true);
       if (editingId) {
         await updateProduct(editingId, finalData);
       } else {
@@ -103,6 +97,8 @@ export function MenuEditorPage() {
       setIsModalOpen(false);
     } catch (e: any) {
       showToast(e?.message || '保存に失敗しました', true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -275,51 +271,48 @@ export function MenuEditorPage() {
                 <input type="text" value={formData.imageUrl} onChange={e => setFormData({...formData, imageUrl: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37]" />
               </div>
 
-              {canAttachRecipeToCategory(String(formData.category)) ? (
-                <div className="space-y-4 border-t border-[#d4af37]/20 pt-4 mt-2">
-                  <div className="flex items-center gap-2 text-[#d4af37] mb-2">
-                    <Save size={14} />
-                    <span className="text-xs font-bold uppercase tracking-widest">Recipe / Operation Details</span>
-                  </div>
-                  
-                  {formData.category === 'キャストオリジナルカクテル' && (
-                    <div>
-                      <label className="text-xs text-gray-400 block mb-1">担当キャスト (ID)</label>
-                      <select value={formData.castId} onChange={e => setFormData({...formData, castId: e.target.value, isCastOriginal: true})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37]">
-                         <option value="">-- 担当なし --</option>
-                         {casts.map(c => <option key={c.id} value={c.id}>{c.displayName} (@{c.loginId})</option>)}
-                      </select>
-                    </div>
-                  )}
-
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">
-                      レシピ本文
-                      {formData.category === 'キャストオリジナルカクテル' && <span className="text-red-500"> *</span>}
-                    </label>
-                    <textarea 
-                      placeholder="・ベース：〇〇&#10;・材料：〇〇&#10;・作り方：〇〇"
-                      value={formData.recipeText || ''} 
-                      onChange={e => setFormData({...formData, recipeText: e.target.value})} 
-                      className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37] h-32 font-mono" 
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">おすすめポイント</label>
-                    <input type="text" value={formData.recommendationText || ''} onChange={e => setFormData({...formData, recommendationText: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37]" placeholder="例：甘くて飲みやすいです！" />
-                  </div>
-
-                  <div>
-                    <label className="text-xs text-gray-400 block mb-1">注意事項 (備考)</label>
-                    <textarea value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37] h-20" placeholder="例：デコレーションは季節により異なります。" />
-                  </div>
+              <div className="space-y-4 border-t border-[#d4af37]/20 pt-4 mt-2">
+                <div className="flex items-center gap-2 text-[#d4af37] mb-2">
+                  <Save size={14} />
+                  <span className="text-xs font-bold uppercase tracking-widest">Recipe / Operation Details</span>
                 </div>
-              ) : (
-                <p className="text-[10px] text-gray-500 mt-1 italic">
-                  ※ 普通/通常カクテルとフードはレシピ表示対象外です。限定メニュー・キャストオリジナル・その他にはレシピを登録できます。
-                </p>
-              )}
+
+                {formData.category === 'キャストオリジナルカクテル' && (
+                  <div>
+                    <label className="text-xs text-gray-400 block mb-1">担当キャスト (ID)</label>
+                    <select value={formData.castId} onChange={e => setFormData({...formData, castId: e.target.value, isCastOriginal: true})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37]">
+                       <option value="">-- 担当なし --</option>
+                       {casts.map(c => <option key={c.id} value={c.id}>{c.displayName} (@{c.loginId})</option>)}
+                    </select>
+                  </div>
+                )}
+
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">
+                    レシピ本文
+                    {formData.category === 'キャストオリジナルカクテル' && <span className="text-red-500"> *</span>}
+                  </label>
+                  <textarea
+                    placeholder="・ベース：〇〇&#10;・材料：〇〇&#10;・作り方：〇〇"
+                    value={formData.recipeText || ''}
+                    onChange={e => setFormData({...formData, recipeText: e.target.value})}
+                    className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37] h-32 font-mono"
+                  />
+                  <p className="mt-1 text-[10px] text-gray-500">
+                    レシピ本文を入力した商品は、注文管理で商品名を押すとレシピ画面に移動できます。
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">おすすめポイント</label>
+                  <input type="text" value={formData.recommendationText || ''} onChange={e => setFormData({...formData, recommendationText: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37]" placeholder="例：甘くて飲みやすいです！" />
+                </div>
+
+                <div>
+                  <label className="text-xs text-gray-400 block mb-1">注意事項 (備考)</label>
+                  <textarea value={formData.notes || ''} onChange={e => setFormData({...formData, notes: e.target.value})} className="w-full bg-black border border-white/10 rounded-lg p-3 text-sm outline-none focus:border-[#d4af37] h-20" placeholder="例：デコレーションは季節により異なります。" />
+                </div>
+              </div>
               
               <div className="flex gap-6 pt-2">
                 <label className="flex items-center gap-2 cursor-pointer">
@@ -335,7 +328,13 @@ export function MenuEditorPage() {
 
             <div className="flex gap-3 pt-4 border-t border-white/10">
               <button onClick={() => setIsModalOpen(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-3 rounded-lg text-sm transition">キャンセル</button>
-              <button onClick={saveProduct} className="flex-1 btn-gold py-3 rounded-lg text-sm flex justify-center items-center gap-2"><Save size={16}/> 保存する</button>
+              <button
+                onClick={saveProduct}
+                disabled={isSaving}
+                className="flex-1 btn-gold py-3 rounded-lg text-sm flex justify-center items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                <Save size={16}/> {isSaving ? '保存中...' : '保存する'}
+              </button>
             </div>
           </div>
         </div>
