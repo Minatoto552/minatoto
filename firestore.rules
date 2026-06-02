@@ -74,10 +74,7 @@ service cloud.firestore {
       allow read: if hasAnyRole(['admin', 'staff', 'cast'])
         || (hasRole('customer') && resource.data.creatorId == request.auth.uid);
       allow create: if request.resource.data.creatorId == request.auth.uid
-        && (
-          hasAnyRole(['admin', 'staff'])
-          || (hasRole('cast') && userDoc(request.auth.uid).canCreateOrder == true)
-        );
+        && hasAnyRole(['admin', 'staff', 'cast']);
       allow update: if hasAnyRole(['admin', 'staff', 'cast']);
       allow delete: if false;
     }

@@ -31,7 +31,7 @@ export function LoginPage() {
         return;
       }
       if (hasSeenOpening) {
-        navigate(user.role === 'admin' ? '/app/admin' : '/app/staff', { replace: true });
+        navigate('/app', { replace: true });
       } else {
         navigate('/opening', { replace: true });
       }

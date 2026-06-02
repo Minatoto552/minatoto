@@ -1082,9 +1082,6 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'updatedAt' | 'isDeleted' | 'totalAmount' | 'tableNameSnapshot'>) => {
     requireApprovedRole(['admin', 'staff', 'cast']);
-    if (currentUser?.role === 'cast' && !currentUser?.canCreateOrder) {
-      throw new Error('注文作成権限がありません。');
-    }
     const totalAmount = orderData.items.reduce((sum, item) => sum + (item.priceSnapshot * item.quantity), 0);
     const id = Math.random().toString(36).substring(7);
     

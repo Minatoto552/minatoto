@@ -252,6 +252,7 @@ function CastHome() {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
+        <ShortcutCard to="/app/order" icon={ShoppingBag} title="注文登録" description="キャストも登録可能" />
         <ShortcutCard to="/app/recipes" icon={BookOpen} title="レシピ確認" description="提供内容を見る" />
         <ShortcutCard to="/app/attendance" icon={CalendarDays} title="シフト" description="提出・確認" />
       </div>

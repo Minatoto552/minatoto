@@ -22,10 +22,8 @@ const completeOpening = () => {
     navigate('/guest', { replace: true });
   } else if (currentUser?.approvalStatus === 'pending') {
     navigate('/app/pending', { replace: true });
-  } else if (currentUser?.role === 'admin') {
-    navigate('/app/admin', { replace: true });
-  } else if (currentUser?.role === 'staff' || currentUser?.role === 'cast') {
-    navigate('/app/staff', { replace: true });
+  } else if (currentUser?.role === 'admin' || currentUser?.role === 'staff' || currentUser?.role === 'cast') {
+    navigate('/app', { replace: true });
   } else {
     navigate('/app', { replace: true });
   }

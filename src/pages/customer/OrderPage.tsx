@@ -27,7 +27,7 @@ export function CustomerOrderPage() {
 
   const canCreateOrder = Boolean(
     currentUser &&
-    (currentUser.role === 'admin' || currentUser.role === 'staff' || (currentUser.role === 'cast' && currentUser.canCreateOrder)),
+    (currentUser.role === 'admin' || currentUser.role === 'staff' || currentUser.role === 'cast'),
   );
   const canViewRecipes = currentUser ? ['admin', 'staff', 'cast'].includes(currentUser.role) : false;
 
@@ -117,7 +117,7 @@ export function CustomerOrderPage() {
           <ShieldAlert className="mx-auto mb-4 text-red-300" size={42} />
           <h2 className="text-xl font-black text-white">注文作成権限がありません</h2>
           <p className="mt-3 text-sm leading-6 text-gray-400">
-            お客様はメニュー閲覧のみ可能です。キャストの注文作成は管理者設定で許可された場合のみ利用できます。
+            お客様はメニュー閲覧のみ可能です。注文登録はスタッフ・キャスト・管理者が行います。
           </p>
         </div>
       </div>

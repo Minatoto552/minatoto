@@ -24,9 +24,9 @@ export function getEmployeeNavigation(role: UserRole | undefined): RoleNavItem[]
     return [
       { path: '/app', label: 'ホーム', shortLabel: 'Home', icon: Home },
       { path: '/app/placement', label: '配置', shortLabel: '配置', icon: LayoutGrid },
-      { path: '/app/staff', label: '注文', shortLabel: '注文', icon: ShoppingBag },
+      { path: '/app/staff', label: '注文管理', shortLabel: '注文', icon: ShoppingBag },
       { path: '/app/admin', label: '管理', shortLabel: '管理', icon: Shield },
-      { path: '/app/profile', label: '設定', shortLabel: '設定', icon: Settings },
+      { path: '/app/attendance', label: 'シフト', shortLabel: 'シフト', icon: CalendarCheck },
     ];
   }
 
@@ -34,9 +34,9 @@ export function getEmployeeNavigation(role: UserRole | undefined): RoleNavItem[]
     return [
       { path: '/app', label: 'ホーム', shortLabel: 'Home', icon: Home },
       { path: '/app/placement', label: '配置', shortLabel: '配置', icon: LayoutGrid },
-      { path: '/app/staff', label: '注文', shortLabel: '注文', icon: ShoppingBag },
+      { path: '/app/staff', label: '注文管理', shortLabel: '注文', icon: ShoppingBag },
       { path: '/app/recipes', label: 'レシピ', shortLabel: 'レシピ', icon: BookOpen },
-      { path: '/app/profile', label: '設定', shortLabel: '設定', icon: Settings },
+      { path: '/app/attendance', label: 'シフト', shortLabel: 'シフト', icon: CalendarCheck },
     ];
   }
 
@@ -44,9 +44,9 @@ export function getEmployeeNavigation(role: UserRole | undefined): RoleNavItem[]
     return [
       { path: '/app', label: 'ホーム', shortLabel: 'Home', icon: Home },
       { path: '/app/placement', label: '配置', shortLabel: '配置', icon: LayoutGrid },
+      { path: '/app/order', label: '注文登録', shortLabel: '注文', icon: ShoppingBag },
       { path: '/app/recipes', label: 'レシピ', shortLabel: 'レシピ', icon: BookOpen },
       { path: '/app/attendance', label: 'シフト', shortLabel: 'シフト', icon: CalendarCheck },
-      { path: '/app/profile', label: '設定', shortLabel: '設定', icon: Settings },
     ];
   }
 
