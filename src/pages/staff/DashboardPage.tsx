@@ -202,7 +202,7 @@ export function StaffDashboardPage() {
                           <div className="text-xs font-bold text-gray-300">{formatOrderItemTitle(item)} x{item.quantity}</div>
                         )}
                         {item.itemType === 'normal_cocktail' && (
-                          <div className="mt-1 text-[11px] text-gray-500">普通カクテルはレシピ対象外です</div>
+                          <div className="mt-1 text-[11px] text-gray-500">色指定の普通カクテルはレシピ対象外です</div>
                         )}
                       </div>
                     );

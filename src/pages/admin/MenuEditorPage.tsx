@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useMockApp, CATEGORIES, Product } from '../../lib/MockAppContext';
-import { Plus, Edit2, Trash2, Eye, EyeOff, Save, X, Star } from 'lucide-react';
+import { BookOpen, Plus, Edit2, Trash2, Eye, EyeOff, Save, Search, X, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function MenuEditorPage() {
@@ -9,6 +9,8 @@ export function MenuEditorPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState<string>('all');
   
   const [formData, setFormData] = useState<Omit<Product, 'id'>>({
     name: '',
@@ -135,6 +137,19 @@ export function MenuEditorPage() {
   };
 
   const activeProducts = products.filter(p => !p.isDeleted);
+  const recipeCount = activeProducts.filter(product => product.recipeText?.trim()).length;
+  const filteredProducts = activeProducts.filter(product => {
+    const keyword = searchTerm.trim().toLowerCase();
+    const matchesCategory = categoryFilter === 'all' || product.category === categoryFilter;
+    const matchesKeyword = !keyword
+      || product.name.toLowerCase().includes(keyword)
+      || product.description.toLowerCase().includes(keyword)
+      || String(product.category).toLowerCase().includes(keyword);
+    return matchesCategory && matchesKeyword;
+  });
+  const visibleCategories = categoryFilter === 'all'
+    ? CATEGORIES
+    : CATEGORIES.filter(category => category === categoryFilter);
 
   return (
     <div className="space-y-6">
@@ -152,20 +167,58 @@ export function MenuEditorPage() {
         )}
       </div>
 
-      <div className="flex justify-between items-center bg-black/30 p-4 rounded-xl border border-[#d4af37]/20">
+      <div className="bg-black/30 p-4 rounded-xl border border-[#d4af37]/20 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
         <div>
           <h3 className="text-lg font-medium text-[#d4af37]">メニュー管理</h3>
-          <p className="text-xs text-gray-400">登録された商品はリアルタイムで注文画面に反映されます。</p>
+          <p className="text-xs text-gray-400">登録された商品とレシピは注文画面・注文管理へ反映されます。</p>
         </div>
         <button onClick={openNew} className="btn-gold px-4 py-2 rounded-lg text-sm flex items-center gap-2">
           <Plus size={16} />
           新規登録
         </button>
+        </div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <div className="rounded-2xl border border-white/10 bg-black/30 p-3">
+            <p className="text-[10px] text-gray-500">登録商品</p>
+            <p className="text-xl font-black text-white">{activeProducts.length}</p>
+          </div>
+          <div className="rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/10 p-3">
+            <p className="text-[10px] text-gray-500">レシピあり</p>
+            <p className="text-xl font-black text-[#f8e7a2]">{recipeCount}</p>
+          </div>
+          <label className="relative col-span-2">
+            <Search size={16} className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+            <input
+              value={searchTerm}
+              onChange={event => setSearchTerm(event.target.value)}
+              placeholder="商品名・カテゴリで検索"
+              className="h-full min-h-[48px] w-full rounded-2xl border border-white/10 bg-black/40 pl-10 pr-4 text-sm text-white outline-none focus:border-[#d4af37]"
+            />
+          </label>
+        </div>
+        <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+          {[{ id: 'all', label: 'すべて' }, ...CATEGORIES.map(category => ({ id: category, label: category }))].map(filter => (
+            <button
+              key={filter.id}
+              type="button"
+              onClick={() => setCategoryFilter(filter.id)}
+              className={cn(
+                'min-w-max rounded-full border px-3 py-1.5 text-[11px] font-bold transition',
+                categoryFilter === filter.id
+                  ? 'border-[#d4af37] bg-[#d4af37]/15 text-[#f8e7a2]'
+                  : 'border-white/10 bg-black/30 text-gray-500 hover:text-white',
+              )}
+            >
+              {filter.label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="space-y-8">
-        {CATEGORIES.map(category => {
-          const categoryProducts = activeProducts.filter(p => p.category === category);
+        {visibleCategories.map(category => {
+          const categoryProducts = filteredProducts.filter(p => p.category === category);
           if (categoryProducts.length === 0) return null;
           
           return (
@@ -182,6 +235,11 @@ export function MenuEditorPage() {
                         <div className="flex items-center gap-2">
                           <h5 className="font-medium text-white">{product.name}</h5>
                           {product.isRecommended && <Star size={12} className="text-[#d4af37] fill-[#d4af37]" />}
+                          {product.recipeText?.trim() && (
+                            <span className="inline-flex items-center gap-1 text-[10px] bg-[#d4af37]/15 text-[#f8e7a2] px-2 rounded border border-[#d4af37]/30">
+                              <BookOpen size={10} /> レシピ
+                            </span>
+                          )}
                           {!product.isAvailable && <span className="text-[10px] bg-red-500/20 text-red-400 px-2 rounded border border-red-500/30">販売停止中</span>}
                         </div>
                         <p className="text-xs text-gray-400 mt-1 line-clamp-1">{product.description}</p>
@@ -210,6 +268,11 @@ export function MenuEditorPage() {
             </div>
           );
         })}
+        {filteredProducts.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-white/10 bg-black/20 p-8 text-center text-sm text-gray-500">
+            条件に一致する商品はありません。
+          </div>
+        )}
       </div>
 
       {productToDelete && (

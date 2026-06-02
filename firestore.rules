@@ -59,10 +59,7 @@ service cloud.firestore {
 
     match /products/{productId} {
       allow read: if signedIn();
-      allow create, update, delete: if hasRole('admin') && hasNoPasswordFields()
-        && !('recipeText' in request.resource.data)
-        && !('notes' in request.resource.data)
-        && !('recommendationText' in request.resource.data);
+      allow create, update, delete: if hasRole('admin') && hasNoPasswordFields();
     }
 
     match /productRecipes/{productId} {

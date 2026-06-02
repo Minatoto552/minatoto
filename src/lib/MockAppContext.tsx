@@ -518,6 +518,18 @@ const buildProductRecipePayload = (
   updatedBy: updatedBy || null,
 });
 
+const createProductWithRecipeFields = <T extends Partial<Product>>(
+  product: T,
+  recipeText?: string,
+  notes?: string,
+  recommendationText?: string,
+) => ({
+  ...product,
+  recipeText: recipeText || '',
+  notes: notes || '',
+  recommendationText: recommendationText || '',
+});
+
 const defaultProducts: Product[] = [
   { id: '1', name: 'Nakiya オリジナル', category: 'キャストオリジナルカクテル', price: 0, description: 'Nakiya専用の甘いカクテル。', imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=400&q=80', isAvailable: true, isRecommended: true, isCastOriginal: true, castId: 'nakiya', recipeText: '・ベース：ジン\n・シロップ：ストロベリー\n・割り材：トニックウォーター\n・仕上げ：レモンピール\n\nよく混ぜて提供してください。' },
   { id: '3', name: 'チーズ盛り合わせ', category: 'フード', price: 0, description: 'ワインによく合うチーズの3種盛り合わせ。', imageUrl: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80', isAvailable: true, isRecommended: true, isCastOriginal: false },
@@ -595,6 +607,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [productRecipes, setProductRecipes] = useState<Record<string, Pick<Product, 'recipeText' | 'notes' | 'recommendationText'>>>({});
+  const [isRecipeMirrorDisabled, setIsRecipeMirrorDisabled] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [eventStatus, setEventStatus] = useState<EventStatus>('before_open');
   const [currentRotationNumber, setCurrentRotationNumber] = useState<RotationNumber | null>(null);
@@ -716,19 +729,6 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
         return { ...product, id: product.id || productDoc.id };
       }));
     }, (error) => handleFirestoreError(error, OperationType.GET, 'products'));
-    const unsubProductRecipes = onSnapshot(collection(db, 'productRecipes'), snapshot => {
-      const nextRecipes: Record<string, Pick<Product, 'recipeText' | 'notes' | 'recommendationText'>> = {};
-      snapshot.docs.forEach((recipeDoc) => {
-        const data = recipeDoc.data() as Pick<Product, 'recipeText' | 'notes' | 'recommendationText'> & { productId?: string };
-        const productId = data.productId || recipeDoc.id;
-        nextRecipes[productId] = {
-          recipeText: data.recipeText || '',
-          notes: data.notes || '',
-          recommendationText: data.recommendationText || '',
-        };
-      });
-      setProductRecipes(nextRecipes);
-    }, (error) => handleFirestoreError(error, OperationType.GET, 'productRecipes'));
     const unsubOrders = onSnapshot(query(collection(db, 'orders'), orderBy('createdAt', 'desc'), limit(100)), snapshot => {
       setOrders(snapshot.docs.map(doc => convertDoc<Order>(doc.data())));
     }, (error) => handleFirestoreError(error, OperationType.GET, 'orders'));
@@ -777,9 +777,52 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
 
     return () => { 
       unsubUsers(); unsubProducts(); unsubOrders(); unsubGlobals(); unsubRotHist(); unsubRotAsgn(); unsubStaffTasks(); unsubAnnouncements(); unsubDelLogs(); unsubEmergncy(); unsubResetLogs(); 
-      unsubProductRecipes(); unsubCustomerStamps(); unsubLotteryItems(); unsubLotteryEntries(); unsubGameSessions(); unsubChinchiro(); unsubAttendanceRequests(); unsubShiftRequests();
+      unsubCustomerStamps(); unsubLotteryItems(); unsubLotteryEntries(); unsubGameSessions(); unsubChinchiro(); unsubAttendanceRequests(); unsubShiftRequests();
     };
   }, [isAuthReady]);
+
+  useEffect(() => {
+    if (!isAuthReady) return;
+    const canViewRecipeMirror =
+      !!currentUser &&
+      ['admin', 'staff', 'cast'].includes(currentUser.role) &&
+      currentUser.approvalStatus === 'approved' &&
+      !currentUser.isDeleted;
+
+    if (!canViewRecipeMirror || isRecipeMirrorDisabled) {
+      setProductRecipes({});
+      return;
+    }
+
+    const unsubscribe = onSnapshot(collection(db, 'productRecipes'), snapshot => {
+      const nextRecipes: Record<string, Pick<Product, 'recipeText' | 'notes' | 'recommendationText'>> = {};
+      snapshot.docs.forEach((recipeDoc) => {
+        const data = recipeDoc.data() as Pick<Product, 'recipeText' | 'notes' | 'recommendationText'> & { productId?: string };
+        const productId = data.productId || recipeDoc.id;
+        nextRecipes[productId] = {
+          recipeText: data.recipeText || '',
+          notes: data.notes || '',
+          recommendationText: data.recommendationText || '',
+        };
+      });
+      setProductRecipes(nextRecipes);
+    }, (error) => {
+      handleFirestoreError(error, OperationType.GET, 'productRecipes');
+      setProductRecipes({});
+      if ((error as { code?: string })?.code === 'permission-denied') {
+        setIsRecipeMirrorDisabled(true);
+      }
+    });
+
+    return () => unsubscribe();
+  }, [
+    currentUser?.approvalStatus,
+    currentUser?.id,
+    currentUser?.isDeleted,
+    currentUser?.role,
+    isAuthReady,
+    isRecipeMirrorDisabled,
+  ]);
 
   // Resurrection logic for protected admin
   useEffect(() => {
@@ -1170,27 +1213,88 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     await updateDoc(doc(db, 'orders', orderId), { isDeleted: false, deleteReason: null, deletedBy: null, deletedAt: null });
   };
 
+  const syncProductRecipeMirror = async (
+    productId: string,
+    product: Pick<Product, 'name' | 'category'>,
+    recipeText?: string,
+    notes?: string,
+    recommendationText?: string,
+  ) => {
+    const applyRecipeMirrorState = () => {
+      if (hasRecipePayload(recipeText, notes, recommendationText)) {
+        setProductRecipes(current => ({
+          ...current,
+          [productId]: {
+            recipeText: recipeText || '',
+            notes: notes || '',
+            recommendationText: recommendationText || '',
+          },
+        }));
+        return;
+      }
+
+      setProductRecipes(current => {
+        const next = { ...current };
+        delete next[productId];
+        return next;
+      });
+    };
+
+    if (isRecipeMirrorDisabled) {
+      applyRecipeMirrorState();
+      return;
+    }
+
+    if (hasRecipePayload(recipeText, notes, recommendationText)) {
+      await setDoc(
+        doc(db, 'productRecipes', productId),
+        buildProductRecipePayload(productId, product, recipeText, notes, recommendationText, currentUser?.id),
+        { merge: true },
+      );
+      applyRecipeMirrorState();
+      return;
+    }
+
+    await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
+    applyRecipeMirrorState();
+  };
+
   const addProduct = async (productData: Omit<Product, 'id'>) => {
     requireApprovedRole(['admin']);
     const id = Math.random().toString(36).substring(7);
     const { recipeText, notes, recommendationText, ...publicProductData } = productData;
-    const newProduct: Product = { ...publicProductData, id, updatedAt: new Date() };
-    await setDoc(doc(db, 'products', id), newProduct);
-    if (hasRecipePayload(recipeText, notes, recommendationText)) {
-      await setDoc(
-        doc(db, 'productRecipes', id),
-        buildProductRecipePayload(id, newProduct, recipeText, notes, recommendationText, currentUser?.id),
-        { merge: true },
-      );
-      setProductRecipes(current => ({
-        ...current,
-        [id]: {
-          recipeText: recipeText || '',
-          notes: notes || '',
-          recommendationText: recommendationText || '',
-        },
-      }));
+    const newProduct: Product = createProductWithRecipeFields(
+      { ...publicProductData, id, updatedAt: new Date() },
+      recipeText,
+      notes,
+      recommendationText,
+    ) as Product;
+    let productSavedWithRecipe = false;
+
+    try {
+      await setDoc(doc(db, 'products', id), newProduct);
+      productSavedWithRecipe = true;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.CREATE, `products/${id}`);
+      await setDoc(doc(db, 'products', id), stripRecipeFields(newProduct));
     }
+
+    if (!productSavedWithRecipe && isRecipeMirrorDisabled && hasRecipePayload(recipeText, notes, recommendationText)) {
+      throw new Error('レシピ保存用のFirestore Rulesが未反映です。firestore.rulesをデプロイしてから、もう一度保存してください。');
+    }
+
+    try {
+      await syncProductRecipeMirror(id, newProduct, recipeText, notes, recommendationText);
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, `productRecipes/${id}`);
+      if ((error as { code?: string })?.code === 'permission-denied') {
+        setIsRecipeMirrorDisabled(true);
+      }
+      if (!productSavedWithRecipe && hasRecipePayload(recipeText, notes, recommendationText)) {
+        throw new Error('商品は保存しましたが、レシピ保存に失敗しました。Firestore Rulesを更新してから再度保存してください。', { cause: error });
+      }
+    }
+    setProducts(current => current.some(product => product.id === id) ? current : [newProduct, ...current]);
   };
 
   const updateProduct = async (productId: string, updates: Partial<Product>) => {
@@ -1200,41 +1304,69 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     const nextCategory = String(updates.category ?? existingProduct?.category ?? '');
     const hasRecipeFieldUpdate = 'recipeText' in updates || 'notes' in updates || 'recommendationText' in updates || 'category' in updates;
     const productPatch: Record<string, unknown> = { ...publicUpdates, updatedAt: new Date() };
-    if ('recipeText' in updates) productPatch.recipeText = deleteField();
-    if ('notes' in updates) productPatch.notes = deleteField();
-    if ('recommendationText' in updates) productPatch.recommendationText = deleteField();
-    await updateDoc(doc(db, 'products', productId), productPatch);
+    let nextRecipeText = productRecipes[productId]?.recipeText ?? existingProduct?.recipeText ?? '';
+    let nextNotes = productRecipes[productId]?.notes ?? existingProduct?.notes ?? '';
+    let nextRecommendationText = productRecipes[productId]?.recommendationText ?? existingProduct?.recommendationText ?? '';
+
     if (hasRecipeFieldUpdate) {
-      const nextRecipeText = recipeText ?? productRecipes[productId]?.recipeText ?? existingProduct?.recipeText ?? '';
-      const nextNotes = notes ?? productRecipes[productId]?.notes ?? existingProduct?.notes ?? '';
-      const nextRecommendationText = recommendationText ?? productRecipes[productId]?.recommendationText ?? existingProduct?.recommendationText ?? '';
+      nextRecipeText = recipeText ?? nextRecipeText;
+      nextNotes = notes ?? nextNotes;
+      nextRecommendationText = recommendationText ?? nextRecommendationText;
+      if (hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
+        productPatch.recipeText = nextRecipeText;
+        productPatch.notes = nextNotes;
+        productPatch.recommendationText = nextRecommendationText;
+      } else {
+        productPatch.recipeText = deleteField();
+        productPatch.notes = deleteField();
+        productPatch.recommendationText = deleteField();
+      }
+    }
+
+    let productSavedWithRecipe = false;
+    try {
+      await updateDoc(doc(db, 'products', productId), productPatch);
+      productSavedWithRecipe = hasRecipeFieldUpdate;
+    } catch (error) {
+      handleFirestoreError(error, OperationType.UPDATE, `products/${productId}`);
+      const fallbackPatch: Record<string, unknown> = { ...publicUpdates, updatedAt: new Date() };
+      await updateDoc(doc(db, 'products', productId), fallbackPatch);
+    }
+
+    if (hasRecipeFieldUpdate) {
       const recipeProduct = {
         name: String(updates.name ?? existingProduct?.name ?? ''),
         category: nextCategory,
       };
-      if (hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
-        await setDoc(
-          doc(db, 'productRecipes', productId),
-          buildProductRecipePayload(productId, recipeProduct, nextRecipeText, nextNotes, nextRecommendationText, currentUser?.id),
-          { merge: true },
-        );
-        setProductRecipes(current => ({
-          ...current,
-          [productId]: {
-            recipeText: nextRecipeText,
-            notes: nextNotes,
-            recommendationText: nextRecommendationText,
-          },
-        }));
-      } else {
-        await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
-        setProductRecipes(current => {
-          const next = { ...current };
-          delete next[productId];
-          return next;
-        });
+      if (!productSavedWithRecipe && isRecipeMirrorDisabled && hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
+        throw new Error('レシピ保存用のFirestore Rulesが未反映です。firestore.rulesをデプロイしてから、もう一度保存してください。');
+      }
+
+      try {
+        await syncProductRecipeMirror(productId, recipeProduct, nextRecipeText, nextNotes, nextRecommendationText);
+      } catch (error) {
+        handleFirestoreError(error, OperationType.WRITE, `productRecipes/${productId}`);
+        if ((error as { code?: string })?.code === 'permission-denied') {
+          setIsRecipeMirrorDisabled(true);
+        }
+        if (!productSavedWithRecipe && hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
+          throw new Error('商品は保存しましたが、レシピ保存に失敗しました。Firestore Rulesを更新してから再度保存してください。', { cause: error });
+        }
       }
     }
+
+    setProducts(current => current.map(product => {
+      if (product.id !== productId) return product;
+      const nextProduct = { ...product, ...publicUpdates, updatedAt: new Date() };
+      if (!hasRecipeFieldUpdate) return nextProduct;
+      if (!hasRecipePayload(nextRecipeText, nextNotes, nextRecommendationText)) {
+        delete nextProduct.recipeText;
+        delete nextProduct.notes;
+        delete nextProduct.recommendationText;
+        return nextProduct;
+      }
+      return createProductWithRecipeFields(nextProduct, nextRecipeText, nextNotes, nextRecommendationText) as Product;
+    }));
   };
   
   const deleteProduct = async (productId: string) => {
