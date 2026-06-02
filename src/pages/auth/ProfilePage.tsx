@@ -24,6 +24,8 @@ export function ProfilePage() {
     return <div className="text-center p-8 text-gray-400">ログインが必要です</div>;
   }
 
+  const canRegisterOrders = ['admin', 'staff', 'cast'].includes(currentUser.role) || currentUser.canCreateOrder;
+
   const handleSave = () => {
     setError(null);
     if (!displayName.trim() || !userCode.trim()) {
@@ -145,7 +147,7 @@ export function ProfilePage() {
                  </div>
                  <div className="bg-black/30 p-3 rounded border border-white/5">
                     <span className="text-[10px] text-gray-500 block">注文権限</span>
-                    <span className="text-sm font-medium">{currentUser.canCreateOrder ? 'あり' : 'なし'}</span>
+                    <span className="text-sm font-medium">{canRegisterOrders ? 'あり' : 'なし'}</span>
                  </div>
                  <div className="bg-black/30 p-3 rounded border border-white/5">
                     <span className="text-[10px] text-gray-500 block">担当卓</span>

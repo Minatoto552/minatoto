@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useMockApp, UserRole, ApprovalStatus } from '../../lib/MockAppContext';
-import { Check, X, Lock, Unlock, Trash2, Undo, RefreshCw } from 'lucide-react';
+import { Check, X, Unlock, Trash2, Undo, RefreshCw } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 
@@ -103,7 +103,7 @@ export function UserManagerPage() {
                     updateUserPermission(user.id, { 
                       approvalStatus: 'approved', 
                       role: user.requestedRole || 'staff',
-                      canCreateOrder: user.requestedRole === 'staff'
+                      canCreateOrder: ['staff', 'cast', 'admin'].includes(user.requestedRole || 'staff')
                     });
                   }}
                   className="flex items-center gap-1 px-3 py-1.5 rounded bg-green-500/20 text-green-400 hover:bg-green-500/40 transition text-xs font-bold"
@@ -175,7 +175,13 @@ export function UserManagerPage() {
                 
                 <select 
                   value={user.role} 
-                  onChange={(e) => updateUserPermission(user.id, { role: e.target.value as UserRole })}
+                  onChange={(e) => {
+                    const nextRole = e.target.value as UserRole;
+                    updateUserPermission(user.id, {
+                      role: nextRole,
+                      canCreateOrder: ['staff', 'cast', 'admin'].includes(nextRole),
+                    });
+                  }}
                   disabled={user.id === currentUser?.id}
                   className="bg-black/50 border border-[#d4af37]/30 text-xs text-[#d4af37] px-2 py-1 rounded outline-none w-24"
                 >
@@ -188,22 +194,9 @@ export function UserManagerPage() {
               <div className="flex items-center justify-between pt-1 relative z-10">
                 <div className="flex items-center gap-4">
                   <div className="text-xs text-gray-400 flex items-center gap-1">
-                    注文権限 {user.canCreateOrder ? <Unlock size={12} className="text-green-500"/> : <Lock size={12} className="text-gray-500"/>}
+                    注文登録 <Unlock size={12} className="text-green-500"/>
+                    <span className="text-green-400">ロール標準で許可</span>
                   </div>
-                  <button 
-                    onClick={() => {
-                      updateUserPermission(user.id, { canCreateOrder: !user.canCreateOrder });
-                    }}
-                    disabled={user.id === currentUser?.id && user.role === 'admin'}
-                    className={cn(
-                      "px-3 py-1 rounded text-[10px] transition",
-                      user.canCreateOrder 
-                        ? "bg-[#7b1113]/30 text-[#ff8c8c] border border-[#7b1113] hover:bg-[#7b1113]/50" 
-                        : "bg-green-500/10 text-green-500 border border-green-500/50 hover:bg-green-500/30"
-                    )}
-                  >
-                    {user.canCreateOrder ? '権限を剥奪' : '権限を付与'}
-                  </button>
                 </div>
                 
                 <button 

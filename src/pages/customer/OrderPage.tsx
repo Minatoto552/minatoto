@@ -1,7 +1,14 @@
 import React from 'react';
-import { BookOpen, CheckCircle2, MessageSquare, Minus, Plus, ShieldAlert, ShoppingBag, Sparkles, Wine } from 'lucide-react';
+import { BookOpen, CheckCircle2, MessageSquare, Minus, Palette, Plus, ShieldAlert, ShoppingBag, Sparkles, Trash2, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { TABLES, useMockApp } from '../../lib/MockAppContext';
+import { TABLES, useMockApp, type OrderItem } from '../../lib/MockAppContext';
+import {
+  NORMAL_COCKTAIL_COLORS,
+  NORMAL_COCKTAIL_COLOR_VALUES,
+  type NormalCocktailColor,
+  canShowRecipeForProduct,
+  formatNormalCocktailOptions,
+} from '../../lib/orderUtils';
 
 const ORDER_CATEGORIES = ['通常カクテル', 'フード', 'キャストオリジナルカクテル', 'その他'] as const;
 
@@ -12,6 +19,26 @@ const normalizeCategory = (category: string) => {
   return 'その他';
 };
 
+type NormalCocktailDraft = {
+  id: string;
+  color1: NormalCocktailColor | '';
+  color2: NormalCocktailColor | '';
+  hasSoda: boolean;
+  quantity: number;
+};
+
+const createNormalCocktailDraft = (): NormalCocktailDraft => ({
+  id: `normal-${Date.now()}`,
+  color1: '',
+  color2: '',
+  hasSoda: false,
+  quantity: 1,
+});
+
+const normalizeColorPair = (colors: NormalCocktailColor[]) => {
+  return [...colors].sort((a, b) => NORMAL_COCKTAIL_COLOR_VALUES.indexOf(a) - NORMAL_COCKTAIL_COLOR_VALUES.indexOf(b));
+};
+
 export function CustomerOrderPage() {
   const { products, addOrder, currentUser } = useMockApp();
   const [cart, setCart] = React.useState<Record<string, number>>({});
@@ -19,8 +46,8 @@ export function CustomerOrderPage() {
   const [tableId, setTableId] = React.useState(currentUser?.assignedTableId || TABLES[0]);
   const [customerMemo, setCustomerMemo] = React.useState('');
   const [staffMemo, setStaffMemo] = React.useState('');
-  const [customDrinkEnabled, setCustomDrinkEnabled] = React.useState(false);
-  const [customDrink, setCustomDrink] = React.useState({ color1: '', color2: '', hasSoda: false, quantity: 1 });
+  const [normalCocktailDraft, setNormalCocktailDraft] = React.useState<NormalCocktailDraft>(() => createNormalCocktailDraft());
+  const [normalCocktails, setNormalCocktails] = React.useState<NormalCocktailDraft[]>([]);
   const [toast, setToast] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -38,7 +65,8 @@ export function CustomerOrderPage() {
   }, {});
 
   const visibleItems = grouped[activeCategory] || [];
-  const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0) + (customDrinkEnabled ? customDrink.quantity : 0);
+  const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
+    + normalCocktails.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = Object.entries(cart).reduce((sum, [productId, quantity]) => {
     const product = available.find(item => item.id === productId);
     return sum + ((product?.price || 0) * quantity);
@@ -52,6 +80,60 @@ export function CustomerOrderPage() {
     return next;
   });
 
+  const selectedDraftColors = [normalCocktailDraft.color1, normalCocktailDraft.color2]
+    .filter(Boolean) as NormalCocktailColor[];
+
+  const toggleDraftColor = (color: NormalCocktailColor) => {
+    setNormalCocktailDraft(current => {
+      const selected = [current.color1, current.color2].filter(Boolean) as NormalCocktailColor[];
+      const next = selected.includes(color)
+        ? selected.filter(value => value !== color)
+        : selected.length < 2
+          ? [...selected, color]
+          : [selected[1], color];
+      return {
+        ...current,
+        color1: next[0] || '',
+        color2: next[1] || '',
+      };
+    });
+  };
+
+  const addNormalCocktail = () => {
+    const selected = normalizeColorPair(selectedDraftColors);
+    if (selected.length !== 2) {
+      setErrorMsg('通常カクテルは赤・青・緑・白・黒から2色を選択してください。');
+      setTimeout(() => setErrorMsg(''), 3000);
+      return;
+    }
+
+    const normalizedDraft: NormalCocktailDraft = {
+      ...normalCocktailDraft,
+      id: `normal-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
+      color1: selected[0],
+      color2: selected[1],
+      quantity: Math.max(1, normalCocktailDraft.quantity || 1),
+    };
+    const signature = `${normalizedDraft.color1}-${normalizedDraft.color2}-${normalizedDraft.hasSoda}`;
+
+    setNormalCocktails(current => {
+      const existing = current.find(item => `${item.color1}-${item.color2}-${item.hasSoda}` === signature);
+      if (!existing) return [...current, normalizedDraft];
+      return current.map(item => item.id === existing.id ? { ...item, quantity: item.quantity + normalizedDraft.quantity } : item);
+    });
+    setNormalCocktailDraft(createNormalCocktailDraft());
+  };
+
+  const updateNormalCocktailQuantity = (id: string, delta: number) => {
+    setNormalCocktails(current => current
+      .map(item => item.id === id ? { ...item, quantity: Math.max(1, item.quantity + delta) } : item)
+      .filter(item => item.quantity > 0));
+  };
+
+  const removeNormalCocktail = (id: string) => {
+    setNormalCocktails(current => current.filter(item => item.id !== id));
+  };
+
   const handleOrder = async () => {
     if (!currentUser || !canCreateOrder || totalItems === 0 || isSubmitting) return;
     setIsSubmitting(true);
@@ -59,7 +141,7 @@ export function CustomerOrderPage() {
     setToast('');
 
     try {
-      const productItems = Object.entries(cart)
+      const productItems: OrderItem[] = Object.entries(cart)
         .map(([productId, quantity]) => {
           const product = available.find(item => item.id === productId);
           if (!product) return null;
@@ -72,18 +154,18 @@ export function CustomerOrderPage() {
             quantity,
           };
         })
-        .filter(Boolean);
+        .filter((item): item is OrderItem => item !== null);
 
-      const customItems = customDrinkEnabled ? [{
-        id: `normal-${Date.now()}`,
+      const customItems: OrderItem[] = normalCocktails.map(item => ({
+        id: item.id,
         itemType: 'normal_cocktail' as const,
-        productName: '通常ドリンク',
+        productName: `通常カクテル（${formatNormalCocktailOptions(item)}）`,
         priceSnapshot: 0,
-        quantity: customDrink.quantity,
-        color1: customDrink.color1,
-        color2: customDrink.color2,
-        hasSoda: customDrink.hasSoda,
-      }] : [];
+        quantity: item.quantity,
+        color1: item.color1,
+        color2: item.color2,
+        hasSoda: item.hasSoda,
+      }));
 
       await addOrder({
         tableId,
@@ -94,11 +176,11 @@ export function CustomerOrderPage() {
           customerMemo ? `お客様: ${customerMemo}` : '',
           staffMemo ? `メモ: ${staffMemo}` : '',
         ].filter(Boolean).join('\n'),
-        tableNameSnapshot: tableId,
       });
 
       setCart({});
-      setCustomDrinkEnabled(false);
+      setNormalCocktails([]);
+      setNormalCocktailDraft(createNormalCocktailDraft());
       setCustomerMemo('');
       setStaffMemo('');
       setToast('注文を登録しました。注文管理に反映されています。');
@@ -133,7 +215,7 @@ export function CustomerOrderPage() {
             <p className="text-[11px] uppercase tracking-[0.3em] text-[#d4af37]">Order Register</p>
             <h1 className="mt-2 text-2xl font-black text-white">注文登録</h1>
             <p className="mt-2 text-sm leading-6 text-gray-400">
-              スタッフが卓番号を確認して注文を登録します。
+              スタッフ・キャストが卓番号と内容を確認して注文を登録します。
             </p>
           </div>
           <div className="home-hero-icon">
@@ -188,53 +270,93 @@ export function CustomerOrderPage() {
       </section>
 
       <section className="iphone-card p-4 space-y-4">
-        <button
-          type="button"
-          onClick={() => setCustomDrinkEnabled(value => !value)}
-          className={cn(
-            'flex min-h-[54px] w-full items-center justify-between rounded-2xl border px-4 text-left transition',
-            customDrinkEnabled ? 'border-[#d4af37]/60 bg-[#d4af37]/12' : 'border-white/10 bg-white/[0.04]',
-          )}
-        >
-          <span className="flex items-center gap-3">
-            <Wine className="text-[#d4af37]" size={20} />
-            <span>
-              <span className="block text-sm font-bold text-white">通常ドリンクを追加</span>
-              <span className="block text-xs text-gray-500">色・炭酸をスタッフが入力</span>
-            </span>
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <Palette className="text-[#d4af37]" size={19} />
+              <h3 className="text-sm font-black text-white">普通カクテル</h3>
+            </div>
+            <p className="mt-1 text-xs leading-5 text-gray-500">
+              赤・青・緑・白・黒から2色選択。別の組み合わせは別行で追加できます。
+            </p>
+          </div>
+          <span className="rounded-full border border-[#d4af37]/35 bg-[#d4af37]/10 px-3 py-1 text-[11px] font-black text-[#f8e7a2]">
+            {normalCocktails.length} 種
           </span>
-          <Sparkles className="text-[#d4af37]" size={18} />
-        </button>
+        </div>
 
-        {customDrinkEnabled && (
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-5 gap-2">
+          {NORMAL_COCKTAIL_COLORS.map(color => {
+            const isSelected = selectedDraftColors.includes(color.value);
+            return (
+              <button
+                key={color.value}
+                type="button"
+                onClick={() => toggleDraftColor(color.value)}
+                className={cn(
+                  'min-h-[48px] rounded-2xl border text-sm font-black transition',
+                  isSelected ? color.className : 'border-white/10 bg-white/[0.04] text-gray-500 hover:text-white',
+                )}
+              >
+                {color.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_120px_140px]">
+          <label className="flex min-h-[52px] items-center justify-between rounded-2xl border border-white/10 bg-black/45 px-4 text-sm text-gray-300">
+            <span className="font-bold">炭酸</span>
             <input
-              value={customDrink.color1}
-              onChange={event => setCustomDrink(value => ({ ...value, color1: event.target.value }))}
-              placeholder="色1"
-              className="min-h-[48px] rounded-2xl border border-white/10 bg-black/45 px-4 text-sm text-white outline-none focus:border-[#d4af37]"
+              type="checkbox"
+              checked={normalCocktailDraft.hasSoda}
+              onChange={event => setNormalCocktailDraft(value => ({ ...value, hasSoda: event.target.checked }))}
+              className="h-5 w-5 accent-[#d4af37]"
             />
-            <input
-              value={customDrink.color2}
-              onChange={event => setCustomDrink(value => ({ ...value, color2: event.target.value }))}
-              placeholder="色2"
-              className="min-h-[48px] rounded-2xl border border-white/10 bg-black/45 px-4 text-sm text-white outline-none focus:border-[#d4af37]"
-            />
-            <label className="flex min-h-[48px] items-center justify-center gap-2 rounded-2xl border border-white/10 bg-black/45 text-sm text-gray-300">
-              <input
-                type="checkbox"
-                checked={customDrink.hasSoda}
-                onChange={event => setCustomDrink(value => ({ ...value, hasSoda: event.target.checked }))}
-              />
-              炭酸
-            </label>
+          </label>
+          <label className="min-h-[52px] rounded-2xl border border-white/10 bg-black/45 px-4 py-2">
+            <span className="block text-[10px] font-bold text-gray-500">数量</span>
             <input
               type="number"
               min={1}
-              value={customDrink.quantity}
-              onChange={event => setCustomDrink(value => ({ ...value, quantity: Math.max(1, Number(event.target.value) || 1) }))}
-              className="min-h-[48px] rounded-2xl border border-white/10 bg-black/45 px-4 text-sm text-white outline-none focus:border-[#d4af37]"
+              value={normalCocktailDraft.quantity}
+              onChange={event => setNormalCocktailDraft(value => ({ ...value, quantity: Math.max(1, Number(event.target.value) || 1) }))}
+              className="w-full bg-transparent text-base font-black text-white outline-none"
             />
+          </label>
+          <button
+            type="button"
+            onClick={addNormalCocktail}
+            className="btn-gold flex min-h-[52px] items-center justify-center gap-2 rounded-2xl text-sm font-black"
+          >
+            <Plus size={17} />
+            追加
+          </button>
+        </div>
+
+        {normalCocktails.length > 0 && (
+          <div className="space-y-2 border-t border-white/10 pt-4">
+            {normalCocktails.map(item => (
+              <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/8 p-3">
+                <Sparkles className="shrink-0 text-[#d4af37]" size={18} />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-white">{formatNormalCocktailOptions(item)}</p>
+                  <p className="text-[11px] text-gray-500">普通カクテル</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <button type="button" onClick={() => updateNormalCocktailQuantity(item.id, -1)} className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-black/40 text-white">
+                    <Minus size={15} />
+                  </button>
+                  <span className="min-w-8 text-center text-sm font-black text-white">{item.quantity}</span>
+                  <button type="button" onClick={() => updateNormalCocktailQuantity(item.id, 1)} className="flex h-9 w-9 items-center justify-center rounded-2xl border border-white/10 bg-black/40 text-white">
+                    <Plus size={15} />
+                  </button>
+                  <button type="button" onClick={() => removeNormalCocktail(item.id)} className="ml-1 flex h-9 w-9 items-center justify-center rounded-2xl border border-red-400/20 bg-red-500/10 text-red-300">
+                    <Trash2 size={15} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </section>
@@ -277,7 +399,7 @@ export function CustomerOrderPage() {
                 <p className="truncate text-sm font-bold text-white">{product.name}</p>
                 <p className="mt-1 truncate text-xs text-gray-500">{product.category}</p>
                 <p className="mt-1 text-sm font-black text-[#d4af37]">{product.price.toLocaleString()} pt</p>
-                {canViewRecipes && product.recipeText && (
+                {canViewRecipes && canShowRecipeForProduct(product) && (
                   <details className="mt-2 text-xs text-gray-300">
                     <summary className="inline-flex cursor-pointer items-center gap-1 text-[#d4af37]">
                       <BookOpen size={12} /> レシピ

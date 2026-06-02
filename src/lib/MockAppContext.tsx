@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useRef } from 'react';
 import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, serverTimestamp, Timestamp, getDocs, getDoc, deleteField, query, orderBy, limit } from 'firebase/firestore';
 import { db, auth } from './firebase';
+import { NORMAL_COCKTAIL_COLOR_VALUES, isFoodCategory, isNormalCocktailCategory } from './orderUtils';
 
 export type UserRole = 'customer' | 'staff' | 'cast' | 'admin' | 'pending';
 export type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -400,7 +401,7 @@ export interface MockAppContextType {
   hardDeleteUser: (userId: string) => Promise<void>;
   restoreUser: (userId: string, restoreTo: ApprovalStatus, role: UserRole) => Promise<void>;
   updateProfile: (userId: string, updates: { displayName?: string, iconUrl?: string, userCode?: string }) => Promise<void>;
-  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status' | 'updatedAt' | 'isDeleted' | 'totalAmount'>) => Promise<void>;
+  addOrder: (order: Omit<Order, 'id' | 'createdAt' | 'status' | 'updatedAt' | 'isDeleted' | 'totalAmount' | 'tableNameSnapshot'>) => Promise<void>;
   updateOrderStatus: (orderId: string, status: OrderStatus) => Promise<void>;
   deleteOrder: (orderId: string, reason: string, userId: string) => Promise<void>;
   restoreOrder: (orderId: string) => Promise<void>;
@@ -489,6 +490,14 @@ const stripRecipeFields = (product: Product): Product => {
   delete publicProduct.notes;
   delete publicProduct.recommendationText;
   return publicProduct;
+};
+
+const canStorePrivateRecipe = (category?: string | null) => {
+  return !isNormalCocktailCategory(category) && !isFoodCategory(category);
+};
+
+const hasRecipePayload = (recipeText?: string, notes?: string, recommendationText?: string) => {
+  return Boolean(recipeText?.trim() || notes?.trim() || recommendationText?.trim());
 };
 
 const defaultProducts: Product[] = [
@@ -1082,6 +1091,27 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'updatedAt' | 'isDeleted' | 'totalAmount' | 'tableNameSnapshot'>) => {
     requireApprovedRole(['admin', 'staff', 'cast']);
+    if (!currentUser || orderData.creatorId !== currentUser.id) {
+      throw new Error('注文作成者がログインユーザーと一致しません。');
+    }
+    if (!Array.isArray(orderData.items) || orderData.items.length === 0) {
+      throw new Error('注文商品が選択されていません。');
+    }
+    orderData.items.forEach((item) => {
+      if (!Number.isFinite(item.quantity) || item.quantity < 1) {
+        throw new Error('注文数量が不正です。');
+      }
+      if (item.itemType === 'normal_cocktail') {
+        const colors = [item.color1, item.color2];
+        const hasTwoValidColors = colors.every(color => color && NORMAL_COCKTAIL_COLOR_VALUES.includes(color));
+        if (!hasTwoValidColors || item.color1 === item.color2) {
+          throw new Error('普通カクテルは赤・青・緑・白・黒から異なる2色を選択してください。');
+        }
+      }
+      if (item.itemType === 'product' && (!item.productId || !item.productName)) {
+        throw new Error('商品情報が不正です。');
+      }
+    });
     const totalAmount = orderData.items.reduce((sum, item) => sum + (item.priceSnapshot * item.quantity), 0);
     const id = Math.random().toString(36).substring(7);
     
@@ -1124,7 +1154,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     const { recipeText, notes, recommendationText, ...publicProductData } = productData;
     const newProduct: Product = { ...publicProductData, id, updatedAt: new Date() };
     await setDoc(doc(db, 'products', id), newProduct);
-    if (productData.isCastOriginal && (recipeText || notes || recommendationText)) {
+    if (canStorePrivateRecipe(String(productData.category)) && hasRecipePayload(recipeText, notes, recommendationText)) {
       await setDoc(doc(db, 'productRecipes', id), {
         productId: id,
         recipeText: recipeText || '',
@@ -1139,12 +1169,15 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
   const updateProduct = async (productId: string, updates: Partial<Product>) => {
     requireApprovedRole(['admin']);
     const { recipeText, notes, recommendationText, ...publicUpdates } = updates;
+    const existingProduct = products.find(product => product.id === productId);
+    const nextCategory = String(updates.category ?? existingProduct?.category ?? '');
+    const hasRecipeFieldUpdate = 'recipeText' in updates || 'notes' in updates || 'recommendationText' in updates || 'category' in updates;
     const productPatch: Record<string, unknown> = { ...publicUpdates, updatedAt: new Date() };
     if ('recipeText' in updates) productPatch.recipeText = deleteField();
     if ('notes' in updates) productPatch.notes = deleteField();
     if ('recommendationText' in updates) productPatch.recommendationText = deleteField();
     await updateDoc(doc(db, 'products', productId), productPatch);
-    if (updates.isCastOriginal !== false && ('recipeText' in updates || 'notes' in updates || 'recommendationText' in updates)) {
+    if (canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
       await setDoc(doc(db, 'productRecipes', productId), {
         productId,
         recipeText: recipeText || '',
@@ -1153,6 +1186,8 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
         updatedAt: serverTimestamp(),
         updatedBy: currentUser?.id
       }, { merge: true });
+    } else if (!canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
+      await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
     }
   };
   

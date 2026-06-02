@@ -1,13 +1,15 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
-import { Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, LayoutDashboard, ShoppingBag, Users, AlertTriangle, Star, Sparkles } from 'lucide-react';
+import { useMockApp, type OrderItem, type Product } from '../../lib/MockAppContext';
+import { BookOpen, Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, LayoutDashboard, ShoppingBag, Users, AlertTriangle, Star, Sparkles, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
+import { canShowRecipeForProduct, formatOrderItemTitle } from '../../lib/orderUtils';
 
 export function StaffDashboardPage() {
-  const { orders, users, emergencyCalls, currentUser, updateOrderStatus, gameSessions, rollEmployeeChinchiro } = useMockApp();
+  const { orders, users, products, emergencyCalls, currentUser, updateOrderStatus, gameSessions, rollEmployeeChinchiro } = useMockApp();
   const [statusFilter, setStatusFilter] = React.useState<'active' | 'pending' | 'processing' | 'completed' | 'delivered' | 'all'>('active');
   const [rollingGameId, setRollingGameId] = React.useState<string | null>(null);
+  const [recipePreview, setRecipePreview] = React.useState<Product | null>(null);
 
   const pendingOrders = (orders || []).filter(o => !o.isDeleted && o.status === 'pending');
   const processingOrders = (orders || []).filter(o => !o.isDeleted && o.status === 'processing');
@@ -41,6 +43,11 @@ export function StaffDashboardPage() {
     } finally {
       setTimeout(() => setRollingGameId(null), 900);
     }
+  };
+
+  const resolveProductForItem = (item: OrderItem) => {
+    if (!item.productId) return null;
+    return (products || []).find(product => product.id === item.productId) || null;
   };
 
   return (
@@ -165,14 +172,31 @@ export function StaffDashboardPage() {
             )}>
               <div className="flex-1 min-w-0">
                 <div className="text-2xl font-black text-white leading-none">{order.tableNameSnapshot}卓</div>
-                <div className="text-xs text-gray-400 mt-1">
-                  {order.items.map(i => `${i.productName}×${i.quantity}`).join(', ')}
+                <div className="mt-3 space-y-2">
+                  {order.items.map((item, index) => {
+                    const product = resolveProductForItem(item);
+                    const canOpenRecipe = canShowRecipeForProduct(product);
+                    return (
+                      <div key={`${item.id}-${index}`} className="rounded-2xl border border-white/10 bg-black/30 px-3 py-2">
+                        {canOpenRecipe && product ? (
+                          <button
+                            type="button"
+                            onClick={() => setRecipePreview(product)}
+                            className="flex w-full items-center justify-between gap-3 text-left text-xs font-bold text-[#f8e7a2] transition hover:text-white"
+                          >
+                            <span className="min-w-0 truncate">{formatOrderItemTitle(item)} x{item.quantity}</span>
+                            <BookOpen size={14} className="shrink-0 text-[#d4af37]" />
+                          </button>
+                        ) : (
+                          <div className="text-xs font-bold text-gray-300">{formatOrderItemTitle(item)} x{item.quantity}</div>
+                        )}
+                        {item.itemType === 'normal_cocktail' && (
+                          <div className="mt-1 text-[11px] text-gray-500">普通カクテルはレシピ対象外です</div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
-                {order.items.some(i => i.productName.includes('オリジナル')) && (
-                  <Link to="/app/recipes" className="inline-flex mt-2 text-[11px] text-[#d4af37] hover:text-white">
-                    該当レシピを確認
-                  </Link>
-                )}
               </div>
               <div className="flex flex-col items-end gap-2 shrink-0">
                 <span className={cn(
@@ -215,6 +239,42 @@ export function StaffDashboardPage() {
           ))
         )}
       </div>
+
+      {recipePreview && (
+        <div className="fixed inset-0 z-[120] flex items-end justify-center bg-black/78 p-3 backdrop-blur-xl sm:items-center">
+          <div className="iphone-card max-h-[86vh] w-full max-w-lg overflow-hidden border-[#d4af37]/45 bg-[#080b12]/95 shadow-[0_0_60px_rgba(212,175,55,0.16)]">
+            <div className="flex items-start justify-between gap-4 border-b border-white/10 p-5">
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.28em] text-[#d4af37]">Recipe Preview</p>
+                <h3 className="mt-2 truncate text-xl font-black text-white">{recipePreview.name}</h3>
+                <p className="mt-1 text-xs text-gray-500">{recipePreview.category}</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRecipePreview(null)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-gray-300"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="max-h-[64vh] space-y-4 overflow-y-auto p-5">
+              {recipePreview.recommendationText && (
+                <div className="rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/10 p-4 text-sm font-bold leading-6 text-[#f8e7a2]">
+                  {recipePreview.recommendationText}
+                </div>
+              )}
+              <pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/45 p-4 font-sans text-sm leading-7 text-gray-200">
+                {recipePreview.recipeText}
+              </pre>
+              {recipePreview.notes && (
+                <div className="rounded-2xl border border-sky-300/20 bg-sky-500/10 p-4 text-xs leading-6 text-sky-100">
+                  <span className="font-black">備考: </span>{recipePreview.notes}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

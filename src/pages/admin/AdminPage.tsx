@@ -15,6 +15,7 @@ import { AttendanceManagerPage } from './AttendanceManagerPage';
 import { TableNumberLabel } from '../../components/ui/TableNumberLabel';
 import { Link } from 'react-router-dom';
 import { useDraggableScroll } from '../../hooks/useDraggableScroll';
+import { formatOrderItemLine } from '../../lib/orderUtils';
 
 export function AdminPage() {
   const { orders, users, updateUserPermission, currentUser, restoreOrder, emergencyCalls, chinchiroSettings, updateChinchiroSettings } = useMockApp();
@@ -163,7 +164,7 @@ export function AdminPage() {
                        <div className="font-bold text-white mb-2"><TableNumberLabel tableId={order.tableId} /></div>
                        <div className="text-xs text-gray-400 space-y-1">
                          {order.items.map((item, idx) => (
-                           <div key={idx}>- {item.productName || '通常カクテル'} x{item.quantity}</div>
+                           <div key={idx}>- {formatOrderItemLine(item)}</div>
                          ))}
                        </div>
                      </div>
@@ -194,7 +195,7 @@ export function AdminPage() {
                        </div>
                        <div className="text-xs text-gray-400 space-y-1 mb-3">
                          {order.items.map((item, idx) => (
-                           <div key={idx} className="line-through opacity-70">- {item.productName || '通常カクテル'} x{item.quantity}</div>
+                           <div key={idx} className="line-through opacity-70">- {formatOrderItemLine(item)}</div>
                          ))}
                        </div>
                        
