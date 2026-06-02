@@ -1,0 +1,182 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    function userDoc(uid) {
+      return get(/databases/$(database)/documents/users/$(uid)).data;
+    }
+
+    function isApproved(uid) {
+      return signedIn()
+        && userDoc(uid).approvalStatus == 'approved'
+        && userDoc(uid).isDeleted != true;
+    }
+
+    function hasRole(role) {
+      return signedIn() && isApproved(request.auth.uid) && userDoc(request.auth.uid).role == role;
+    }
+
+    function hasAnyRole(roles) {
+      return signedIn() && isApproved(request.auth.uid) && userDoc(request.auth.uid).role in roles;
+    }
+
+    function isSelf(userId) {
+      return signedIn() && request.auth.uid == userId;
+    }
+
+    function hasNoPasswordFields() {
+      return !('password' in request.resource.data)
+        && !('passwordHash' in request.resource.data)
+        && !('passwordSalt' in request.resource.data);
+    }
+
+    match /users/{userId} {
+      allow get: if hasRole('admin')
+        || isSelf(userId)
+        || (hasAnyRole(['staff', 'cast']) && resource.data.role in ['admin', 'staff', 'cast'])
+        || (hasRole('customer') && resource.data.role in ['admin', 'staff', 'cast']);
+
+      allow list: if hasRole('admin');
+
+      allow create: if isSelf(userId)
+        && hasNoPasswordFields()
+        && request.resource.data.role in ['customer', 'pending']
+        && request.resource.data.approvalStatus in ['approved', 'pending'];
+
+      allow update: if hasRole('admin') && hasNoPasswordFields();
+
+      allow update: if isSelf(userId)
+        && hasNoPasswordFields()
+        && request.resource.data.diff(resource.data).affectedKeys()
+          .hasOnly(['displayName', 'vrcName', 'iconUrl', 'userCode', 'updatedAt']);
+
+      allow delete: if false;
+    }
+
+    match /products/{productId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin') && hasNoPasswordFields()
+        && !('recipeText' in request.resource.data)
+        && !('notes' in request.resource.data)
+        && !('recommendationText' in request.resource.data);
+    }
+
+    match /productRecipes/{productId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /orders/{orderId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast'])
+        || (hasRole('customer') && resource.data.creatorId == request.auth.uid);
+      allow create: if request.resource.data.creatorId == request.auth.uid
+        && (
+          hasAnyRole(['admin', 'staff'])
+          || (hasRole('cast') && userDoc(request.auth.uid).canCreateOrder == true)
+        );
+      allow update: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow delete: if false;
+    }
+
+    match /announcements/{announcementId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /rotationAssignments/{assignmentId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /rotationStatusHistory/{historyId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow create: if hasRole('admin');
+      allow update, delete: if false;
+    }
+
+    match /staffTasks/{taskId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /global/{docId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /emergencyCalls/{callId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast'])
+        || (hasRole('customer') && resource.data.castUserId == request.auth.uid);
+      allow create: if hasAnyRole(['admin', 'staff', 'cast', 'customer'])
+        && request.resource.data.castUserId == request.auth.uid;
+      allow update: if hasAnyRole(['admin', 'staff'])
+        || (signedIn() && resource.data.castUserId == request.auth.uid);
+      allow delete: if false;
+    }
+
+    match /customerStamps/{stampId} {
+      allow read: if hasRole('admin')
+        || (hasRole('customer') && resource.data.customerMemberId == request.auth.uid);
+      allow create: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow update, delete: if false;
+    }
+
+    match /lotteryItems/{itemId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /lotteryEntries/{entryId} {
+      allow read: if hasRole('admin')
+        || (hasRole('customer') && resource.data.customerMemberId == request.auth.uid);
+      allow create: if hasRole('customer')
+        && request.resource.data.customerMemberId == request.auth.uid;
+      allow update: if hasRole('admin');
+      allow delete: if false;
+    }
+
+    match /gameSettings/{settingId} {
+      allow read: if signedIn();
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /gameSessions/{sessionId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast'])
+        || (hasRole('customer') && resource.data.customerMemberId == request.auth.uid);
+      allow create: if hasRole('customer')
+        && request.resource.data.customerMemberId == request.auth.uid;
+      allow update: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow delete: if false;
+    }
+
+    match /shiftRequests/{shiftId} {
+      allow read: if hasAnyRole(['admin', 'staff', 'cast']);
+      allow create, update, delete: if hasRole('admin');
+    }
+
+    match /attendanceRequests/{requestId} {
+      allow read: if hasRole('admin') || (signedIn() && resource.data.userId == request.auth.uid);
+      allow create, update: if hasAnyRole(['admin', 'staff', 'cast'])
+        && request.resource.data.userId == request.auth.uid;
+      allow delete: if hasRole('admin');
+    }
+
+    match /historyResetLogs/{logId} {
+      allow read, create: if hasRole('admin');
+      allow update, delete: if false;
+    }
+
+    match /userDeleteLogs/{logId} {
+      allow read, create: if hasRole('admin');
+      allow update, delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
