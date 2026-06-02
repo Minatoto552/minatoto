@@ -54,6 +54,13 @@ export function StaffDashboardPage() {
     return (products || []).find(product => product.name.trim() === itemName) || null;
   };
 
+  const hasRecipeSnapshot = (item: OrderItem) => {
+    return canShowRecipeForProduct({
+      category: item.categorySnapshot,
+      recipeText: item.recipeTextSnapshot,
+    });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in p-1 sm:p-4">
       <div className="iphone-card p-5">
@@ -179,12 +186,13 @@ export function StaffDashboardPage() {
                 <div className="mt-3 space-y-2">
                   {order.items.map((item, index) => {
                     const product = resolveProductForItem(item);
-                    const canOpenRecipe = canShowRecipeForProduct(product);
+                    const canOpenRecipe = canShowRecipeForProduct(product) || hasRecipeSnapshot(item);
+                    const recipeProductId = product?.id || item.productId;
                     return (
                       <div key={`${item.id}-${index}`} className="rounded-2xl border border-white/10 bg-black/30 px-3 py-2">
-                        {canOpenRecipe && product ? (
+                        {canOpenRecipe && recipeProductId ? (
                           <Link
-                            to={`/app/recipes?product=${encodeURIComponent(product.id)}`}
+                            to={`/app/recipes?product=${encodeURIComponent(recipeProductId)}`}
                             className="flex w-full items-center justify-between gap-3 text-left text-xs font-bold text-[#f8e7a2] transition hover:text-white"
                           >
                             <span className="min-w-0 truncate">{formatOrderItemTitle(item)} x{item.quantity}</span>

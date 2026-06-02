@@ -152,6 +152,10 @@ export function CustomerOrderPage() {
             productName: product.name,
             priceSnapshot: product.price,
             quantity,
+            categorySnapshot: product.category,
+            recipeTextSnapshot: canShowRecipeForProduct(product) ? product.recipeText : '',
+            notesSnapshot: canShowRecipeForProduct(product) ? product.notes : '',
+            recommendationTextSnapshot: canShowRecipeForProduct(product) ? product.recommendationText : '',
           };
         })
         .filter((item): item is OrderItem => item !== null);

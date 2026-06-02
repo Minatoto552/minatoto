@@ -214,6 +214,10 @@ export interface OrderItem {
   productName: string; // snapshot
   priceSnapshot: number; // snapshot
   quantity: number;
+  categorySnapshot?: string;
+  recipeTextSnapshot?: string;
+  notesSnapshot?: string;
+  recommendationTextSnapshot?: string;
   // For normal cocktails
   color1?: string;
   color2?: string;
@@ -500,6 +504,24 @@ const hasRecipePayload = (recipeText?: string, notes?: string, recommendationTex
   return Boolean(recipeText?.trim() || notes?.trim() || recommendationText?.trim());
 };
 
+const buildProductRecipePayload = (
+  productId: string,
+  product: Pick<Product, 'name' | 'category'>,
+  recipeText?: string,
+  notes?: string,
+  recommendationText?: string,
+  updatedBy?: string,
+) => ({
+  productId,
+  productNameSnapshot: product.name,
+  categorySnapshot: product.category,
+  recipeText: recipeText || '',
+  notes: notes || '',
+  recommendationText: recommendationText || '',
+  updatedAt: serverTimestamp(),
+  updatedBy: updatedBy || null,
+});
+
 const defaultProducts: Product[] = [
   { id: '1', name: 'Nakiya オリジナル', category: 'キャストオリジナルカクテル', price: 0, description: 'Nakiya専用の甘いカクテル。', imageUrl: 'https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=400&q=80', isAvailable: true, isRecommended: true, isCastOriginal: true, castId: 'nakiya', recipeText: '・ベース：ジン\n・シロップ：ストロベリー\n・割り材：トニックウォーター\n・仕上げ：レモンピール\n\nよく混ぜて提供してください。' },
   { id: '3', name: 'チーズ盛り合わせ', category: 'フード', price: 0, description: 'ワインによく合うチーズの3種盛り合わせ。', imageUrl: 'https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?auto=format&fit=crop&w=400&q=80', isAvailable: true, isRecommended: true, isCastOriginal: false },
@@ -693,13 +715,17 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
       setHasReceivedInitialUsers(true);
     });
     const unsubProducts = onSnapshot(collection(db, 'products'), snapshot => {
-      setProducts(snapshot.docs.map(doc => convertDoc<Product>(doc.data())));
+      setProducts(snapshot.docs.map(productDoc => {
+        const product = convertDoc<Product>(productDoc.data());
+        return { ...product, id: product.id || productDoc.id };
+      }));
     }, (error) => handleFirestoreError(error, OperationType.GET, 'products'));
     const unsubProductRecipes = onSnapshot(collection(db, 'productRecipes'), snapshot => {
       const nextRecipes: Record<string, Pick<Product, 'recipeText' | 'notes' | 'recommendationText'>> = {};
       snapshot.docs.forEach((recipeDoc) => {
-        const data = recipeDoc.data() as Pick<Product, 'recipeText' | 'notes' | 'recommendationText'>;
-        nextRecipes[recipeDoc.id] = {
+        const data = recipeDoc.data() as Pick<Product, 'recipeText' | 'notes' | 'recommendationText'> & { productId?: string };
+        const productId = data.productId || recipeDoc.id;
+        nextRecipes[productId] = {
           recipeText: data.recipeText || '',
           notes: data.notes || '',
           recommendationText: data.recommendationText || '',
@@ -1155,14 +1181,19 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     const newProduct: Product = { ...publicProductData, id, updatedAt: new Date() };
     await setDoc(doc(db, 'products', id), newProduct);
     if (canStorePrivateRecipe(String(productData.category)) && hasRecipePayload(recipeText, notes, recommendationText)) {
-      await setDoc(doc(db, 'productRecipes', id), {
-        productId: id,
-        recipeText: recipeText || '',
-        notes: notes || '',
-        recommendationText: recommendationText || '',
-        updatedAt: serverTimestamp(),
-        updatedBy: currentUser?.id
-      }, { merge: true });
+      await setDoc(
+        doc(db, 'productRecipes', id),
+        buildProductRecipePayload(id, newProduct, recipeText, notes, recommendationText, currentUser?.id),
+        { merge: true },
+      );
+      setProductRecipes(current => ({
+        ...current,
+        [id]: {
+          recipeText: recipeText || '',
+          notes: notes || '',
+          recommendationText: recommendationText || '',
+        },
+      }));
     }
   };
 
@@ -1178,16 +1209,33 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     if ('recommendationText' in updates) productPatch.recommendationText = deleteField();
     await updateDoc(doc(db, 'products', productId), productPatch);
     if (canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
-      await setDoc(doc(db, 'productRecipes', productId), {
-        productId,
-        recipeText: recipeText || '',
-        notes: notes || '',
-        recommendationText: recommendationText || '',
-        updatedAt: serverTimestamp(),
-        updatedBy: currentUser?.id
-      }, { merge: true });
+      const nextRecipeText = recipeText ?? productRecipes[productId]?.recipeText ?? existingProduct?.recipeText ?? '';
+      const nextNotes = notes ?? productRecipes[productId]?.notes ?? existingProduct?.notes ?? '';
+      const nextRecommendationText = recommendationText ?? productRecipes[productId]?.recommendationText ?? existingProduct?.recommendationText ?? '';
+      const recipeProduct = {
+        name: String(updates.name ?? existingProduct?.name ?? ''),
+        category: nextCategory,
+      };
+      await setDoc(
+        doc(db, 'productRecipes', productId),
+        buildProductRecipePayload(productId, recipeProduct, nextRecipeText, nextNotes, nextRecommendationText, currentUser?.id),
+        { merge: true },
+      );
+      setProductRecipes(current => ({
+        ...current,
+        [productId]: {
+          recipeText: nextRecipeText,
+          notes: nextNotes,
+          recommendationText: nextRecommendationText,
+        },
+      }));
     } else if (!canStorePrivateRecipe(nextCategory) && hasRecipeFieldUpdate) {
       await deleteDoc(doc(db, 'productRecipes', productId)).catch(() => undefined);
+      setProductRecipes(current => {
+        const next = { ...current };
+        delete next[productId];
+        return next;
+      });
     }
   };
   
