@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { BellRing, LogOut, User, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useMockApp } from '../../lib/MockAppContext';
@@ -7,11 +7,11 @@ import { getCustomerNavigation } from '../../hooks/useRoleNavigation';
 import { getRotationLabel } from '../../hooks/usePlacements';
 import { EmergencyCallNotification } from '../ui/EmergencyCallNotification';
 import { EmergencyHelpButton } from '../ui/EmergencyHelpButton';
+import { CollapsibleBottomNav } from './CollapsibleBottomNav';
 
 export function CustomerLayout() {
   const { currentUser, logout, currentRotationNumber, announcements } = useMockApp();
   const navigate = useNavigate();
-  const location = useLocation();
   const navItems = getCustomerNavigation();
 
   const topAnnouncement = announcements
@@ -81,28 +81,7 @@ export function CustomerLayout() {
         <Outlet />
       </main>
 
-      <footer className="fixed inset-x-0 bottom-0 z-50 px-3 pb-safe">
-        <nav className="mx-auto grid max-w-md grid-cols-5 gap-1 rounded-[28px] border border-white/10 bg-[#080b12]/88 p-2 shadow-[0_20px_60px_rgba(0,0,0,0.65)] backdrop-blur-2xl">
-          {navItems.map(item => {
-            const isActive = location.pathname === item.path || (item.path !== '/guest' && location.pathname.startsWith(item.path));
-            return (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={cn(
-                  'flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-[22px] px-1 text-center transition active:scale-[0.97]',
-                  isActive
-                    ? 'bg-[#d4af37] text-black shadow-[0_10px_26px_rgba(212,175,55,0.22)]'
-                    : 'text-gray-500 hover:bg-white/[0.06] hover:text-gray-200',
-                )}
-              >
-                <item.icon size={22} />
-                <span className="text-[10px] font-black leading-none tracking-wide">{item.shortLabel}</span>
-              </Link>
-            );
-          })}
-        </nav>
-      </footer>
+      <CollapsibleBottomNav items={navItems} rootPath="/guest" />
     </div>
   );
 }
