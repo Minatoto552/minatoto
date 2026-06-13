@@ -1,16 +1,32 @@
-import { initializeApp } from 'firebase/app';
-import { getFirestore } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
+import { getApp, getApps, initializeApp } from "firebase/app";
+import { getFirestore } from "firebase/firestore";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? "AIzaSyCBRgyVvxu1vlv9VaAW8lAE8JkEZD8gl1E",
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN ?? "gen-lang-client-0889115702.firebaseapp.com",
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID ?? "gen-lang-client-0889115702",
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET ?? "gen-lang-client-0889115702.firebasestorage.app",
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID ?? "814028031113",
-  appId: import.meta.env.VITE_FIREBASE_APP_ID ?? "1:814028031113:web:4e0b0f1e8a9cc4b4533258"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
 };
 
-const app = initializeApp(firebaseConfig);
-export const db = getFirestore(app, import.meta.env.VITE_FIREBASE_DATABASE_ID ?? "ai-studio-0f9ba0b3-16be-43d0-b95d-488f1197f7f5");
-export const auth = getAuth(app);
+const envKeyByConfigKey: Record<keyof typeof firebaseConfig, string> = {
+  apiKey: "VITE_FIREBASE_API_KEY",
+  authDomain: "VITE_FIREBASE_AUTH_DOMAIN",
+  projectId: "VITE_FIREBASE_PROJECT_ID",
+  storageBucket: "VITE_FIREBASE_STORAGE_BUCKET",
+  messagingSenderId: "VITE_FIREBASE_MESSAGING_SENDER_ID",
+  appId: "VITE_FIREBASE_APP_ID",
+};
+
+const missingKeys = Object.entries(firebaseConfig)
+  .filter(([, value]) => !value)
+  .map(([key]) => envKeyByConfigKey[key as keyof typeof firebaseConfig]);
+
+export const firebaseConfigError =
+  missingKeys.length > 0
+    ? `Firebase設定が不足しています: ${missingKeys.join(", ")}。.env を作成して設定してください。`
+    : null;
+
+export const firebaseApp = firebaseConfigError ? null : getApps().length ? getApp() : initializeApp(firebaseConfig);
+export const db = firebaseApp ? getFirestore(firebaseApp) : null;
