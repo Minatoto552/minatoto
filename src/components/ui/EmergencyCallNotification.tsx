@@ -4,11 +4,13 @@ import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { TableNumberLabel } from './TableNumberLabel';
 
+const getCallTime = (call: { calledAt?: Date; createdAt: Date }) => new Date(call.calledAt || call.createdAt);
+
 export function EmergencyCallNotification() {
   const { emergencyCalls, currentUser, handleEmergencyCall, cancelEmergencyCall } = useMockApp();
   const activeCalls = [...emergencyCalls]
     .filter(c => c.status === 'active')
-    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    .sort((a, b) => getCallTime(b).getTime() - getCallTime(a).getTime());
 
   if (activeCalls.length === 0) return null;
 
@@ -33,7 +35,7 @@ export function EmergencyCallNotification() {
                   緊急ヘルプ発生
                 </span>
                 <span className="text-xs font-mono bg-black/20 px-2 py-0.5 rounded-full border border-white/10">
-                  {new Date(call.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  {getCallTime(call).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </span>
               </div>
               

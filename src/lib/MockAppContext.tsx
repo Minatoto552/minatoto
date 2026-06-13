@@ -60,6 +60,7 @@ export interface EmergencyCall {
   message?: string | null;
   status: EmergencyCallStatus;
   createdAt: Date;
+  calledAt?: Date;
   handledAt?: Date;
   handledBy?: string;
   canceledAt?: Date;
@@ -420,7 +421,7 @@ export interface MockAppContextType {
   addAnnouncement: (announcement: Omit<Announcement, 'id' | 'createdAt'>) => Promise<void>;
   updateAnnouncement: (id: string, updates: Partial<Announcement>) => Promise<void>;
   deleteAnnouncement: (id: string) => Promise<void>;
-  triggerEmergencyCall: (data: Omit<EmergencyCall, 'id' | 'status' | 'createdAt'>) => Promise<void>;
+  triggerEmergencyCall: (data: Omit<EmergencyCall, 'id' | 'status' | 'createdAt' | 'calledAt'>) => Promise<void>;
   handleEmergencyCall: (id: string, userId: string) => Promise<void>;
   cancelEmergencyCall: (id: string, reason?: string) => Promise<void>;
   resetHistory: (options: { 
@@ -744,7 +745,13 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     const unsubStaffTasks = onSnapshot(collection(db, 'staffTasks'), snap => setStaffTasks(snap.docs.map(d => convertDoc<StaffTaskAssignment>(d.data()))), (error) => handleFirestoreError(error, OperationType.GET, 'staffTasks'));
     const unsubAnnouncements = onSnapshot(collection(db, 'announcements'), snap => setAnnouncements(snap.docs.map(d => convertDoc<Announcement>(d.data()))), (error) => handleFirestoreError(error, OperationType.GET, 'announcements'));
     const unsubDelLogs = onSnapshot(query(collection(db, 'userDeleteLogs'), orderBy('deletedAt', 'desc'), limit(50)), snap => setUserDeleteLogs(snap.docs.map(d => convertDoc<UserDeleteLog>(d.data()))), (error) => handleFirestoreError(error, OperationType.GET, 'userDeleteLogs'));
-    const unsubEmergncy = onSnapshot(query(collection(db, 'emergencyCalls'), orderBy('calledAt', 'desc'), limit(50)), snap => setEmergencyCalls(snap.docs.map(d => convertDoc<EmergencyCall>(d.data()))), (error) => handleFirestoreError(error, OperationType.GET, 'emergencyCalls'));
+    const unsubEmergncy = onSnapshot(collection(db, 'emergencyCalls'), snap => {
+      const calls = snap.docs
+        .map(d => convertDoc<EmergencyCall>(d.data()))
+        .sort((a, b) => new Date(b.calledAt || b.createdAt).getTime() - new Date(a.calledAt || a.createdAt).getTime())
+        .slice(0, 50);
+      setEmergencyCalls(calls);
+    }, (error) => handleFirestoreError(error, OperationType.GET, 'emergencyCalls'));
     const unsubResetLogs = onSnapshot(query(collection(db, 'historyResetLogs'), orderBy('executedAt', 'desc'), limit(50)), snap => setHistoryResetLogs(snap.docs.map(d => convertDoc<HistoryResetLog>(d.data()))), (error) => handleFirestoreError(error, OperationType.GET, 'historyResetLogs'));
     
     // Customer features
@@ -1473,10 +1480,13 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
     await deleteDoc(doc(db, 'announcements', id));
   };
 
-  const triggerEmergencyCall = async (data: Omit<EmergencyCall, 'id' | 'status' | 'createdAt'>) => {
+  const triggerEmergencyCall = async (data: Omit<EmergencyCall, 'id' | 'status' | 'createdAt' | 'calledAt'>) => {
     requireApprovedRole(['admin', 'staff', 'cast', 'customer']);
     const id = Math.random().toString(36).substring(7);
-    await setDoc(doc(db, 'emergencyCalls', id), { ...data, id, status: 'active', createdAt: new Date() });
+    const now = new Date();
+    const newCall: EmergencyCall = { ...data, id, status: 'active', createdAt: now, calledAt: now };
+    await setDoc(doc(db, 'emergencyCalls', id), newCall);
+    setEmergencyCalls(current => current.some(call => call.id === id) ? current : [newCall, ...current]);
   };
 
   const handleEmergencyCall = async (id: string, userId: string) => {

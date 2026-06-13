@@ -9,6 +9,7 @@ export function EmergencyHelpButton() {
   const [message, setMessage] = useState('');
   const [selectedTable, setSelectedTable] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
 
   if (!currentUser || !['customer', 'cast', 'admin', 'staff'].includes(currentUser.role)) return null;
 
@@ -24,6 +25,7 @@ export function EmergencyHelpButton() {
       ? currentUser.assignedTableId
       : getCastCurrentTable(currentUser.id);
     setSelectedTable(tableId || '');
+    setSubmitError('');
     setIsOpen(true);
   };
 
@@ -34,6 +36,7 @@ export function EmergencyHelpButton() {
     }
     
     setIsSubmitting(true);
+    setSubmitError('');
     try {
       await triggerEmergencyCall({
         tableId: selectedTable,
@@ -46,6 +49,9 @@ export function EmergencyHelpButton() {
       });
       setIsOpen(false);
       setMessage('');
+    } catch (error) {
+      const message = error instanceof Error ? error.message : '緊急ヘルプの送信に失敗しました。';
+      setSubmitError(message);
     } finally {
       setIsSubmitting(false);
     }
@@ -114,6 +120,11 @@ export function EmergencyHelpButton() {
               </div>
 
               <div className="pt-2">
+                {submitError && (
+                  <div className="mb-3 rounded-2xl border border-red-300/40 bg-red-950/60 p-3 text-xs font-bold leading-5 text-red-100">
+                    {submitError}
+                  </div>
+                )}
                 <button 
                   onClick={handleSubmit}
                   disabled={isSubmitting || !selectedTable}
