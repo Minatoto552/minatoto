@@ -1,5 +1,5 @@
 import React from 'react';
-import { BookOpen, CheckCircle2, MessageSquare, Minus, Palette, Plus, ShieldAlert, ShoppingBag, Sparkles, Trash2, Wine } from 'lucide-react';
+import { BookOpen, CheckCircle2, MessageSquare, Minus, Palette, Plus, Search, ShieldAlert, ShoppingBag, Sparkles, Trash2, Wine, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { TABLES, useMockApp, type OrderItem } from '../../lib/MockAppContext';
 import {
@@ -27,6 +27,14 @@ type NormalCocktailDraft = {
   quantity: number;
 };
 
+type RecipePreview = {
+  title: string;
+  category?: string;
+  recipeText: string;
+  notes?: string;
+  recommendationText?: string;
+};
+
 const createNormalCocktailDraft = (): NormalCocktailDraft => ({
   id: `normal-${Date.now()}`,
   color1: '',
@@ -42,12 +50,14 @@ const normalizeColorPair = (colors: NormalCocktailColor[]) => {
 export function CustomerOrderPage() {
   const { products, addOrder, currentUser } = useMockApp();
   const [cart, setCart] = React.useState<Record<string, number>>({});
+  const [searchTerm, setSearchTerm] = React.useState('');
   const [activeCategory, setActiveCategory] = React.useState<string>('通常カクテル');
   const [tableId, setTableId] = React.useState(currentUser?.assignedTableId || TABLES[0]);
   const [customerMemo, setCustomerMemo] = React.useState('');
   const [staffMemo, setStaffMemo] = React.useState('');
   const [normalCocktailDraft, setNormalCocktailDraft] = React.useState<NormalCocktailDraft>(() => createNormalCocktailDraft());
   const [normalCocktails, setNormalCocktails] = React.useState<NormalCocktailDraft[]>([]);
+  const [selectedRecipe, setSelectedRecipe] = React.useState<RecipePreview | null>(null);
   const [toast, setToast] = React.useState('');
   const [errorMsg, setErrorMsg] = React.useState('');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
@@ -64,7 +74,21 @@ export function CustomerOrderPage() {
     return acc;
   }, {});
 
-  const visibleItems = grouped[activeCategory] || [];
+  const normalizedSearchTerm = searchTerm.trim().toLowerCase();
+  const visibleItems = (grouped[activeCategory] || []).filter(product => {
+    if (!normalizedSearchTerm) return true;
+    return [product.name, product.category, product.description]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase()
+      .includes(normalizedSearchTerm);
+  });
+  const cartItems = Object.entries(cart)
+    .map(([productId, quantity]) => {
+      const product = available.find(item => item.id === productId);
+      return product ? { product, quantity } : null;
+    })
+    .filter((item): item is { product: (typeof available)[number]; quantity: number } => item !== null);
   const totalItems = Object.values(cart).reduce((sum, quantity) => sum + quantity, 0)
     + normalCocktails.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = Object.entries(cart).reduce((sum, [productId, quantity]) => {
@@ -79,6 +103,17 @@ export function CustomerOrderPage() {
     else next[id] -= 1;
     return next;
   });
+
+  const openRecipePreview = (product: (typeof available)[number]) => {
+    if (!canViewRecipes || !canShowRecipeForProduct(product)) return;
+    setSelectedRecipe({
+      title: product.name,
+      category: product.category,
+      recipeText: product.recipeText || '',
+      notes: product.notes,
+      recommendationText: product.recommendationText,
+    });
+  };
 
   const selectedDraftColors = [normalCocktailDraft.color1, normalCocktailDraft.color2]
     .filter(Boolean) as NormalCocktailColor[];
@@ -384,6 +419,28 @@ export function CustomerOrderPage() {
         ))}
       </div>
 
+      <section className="iphone-card p-3">
+        <label className="flex min-h-[52px] items-center gap-3 rounded-2xl border border-white/10 bg-black/45 px-4">
+          <Search size={18} className="shrink-0 text-[#d4af37]" />
+          <input
+            value={searchTerm}
+            onChange={event => setSearchTerm(event.target.value)}
+            placeholder="商品名・カテゴリ・説明で検索"
+            className="min-w-0 flex-1 bg-transparent text-sm font-bold text-white outline-none placeholder:text-gray-600"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={() => setSearchTerm('')}
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-gray-300"
+              aria-label="検索をクリア"
+            >
+              <X size={15} />
+            </button>
+          )}
+        </label>
+      </section>
+
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {visibleItems.map(product => {
           const quantity = cart[product.id] || 0;
@@ -400,7 +457,18 @@ export function CustomerOrderPage() {
                 </div>
               )}
               <div className="min-w-0 flex-1">
-                <p className="truncate text-sm font-bold text-white">{product.name}</p>
+                {canViewRecipes && canShowRecipeForProduct(product) ? (
+                  <button
+                    type="button"
+                    onClick={() => openRecipePreview(product)}
+                    className="flex max-w-full items-center gap-1 text-left text-sm font-bold text-[#f8e7a2] transition hover:text-white"
+                  >
+                    <span className="truncate">{product.name}</span>
+                    <BookOpen size={13} className="shrink-0 text-[#d4af37]" />
+                  </button>
+                ) : (
+                  <p className="truncate text-sm font-bold text-white">{product.name}</p>
+                )}
                 <p className="mt-1 truncate text-xs text-gray-500">{product.category}</p>
                 <p className="mt-1 text-sm font-black text-[#d4af37]">{product.price.toLocaleString()} pt</p>
                 {canViewRecipes && canShowRecipeForProduct(product) && (
@@ -438,6 +506,48 @@ export function CustomerOrderPage() {
         </div>
       )}
 
+      {totalItems > 0 && (
+        <section className="iphone-card border-[#d4af37]/35 p-4">
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <div>
+              <p className="text-[11px] font-black uppercase tracking-[0.24em] text-[#d4af37]">Order Preview</p>
+              <h3 className="mt-1 text-base font-black text-white">登録内容</h3>
+            </div>
+            <div className="rounded-2xl border border-[#d4af37]/30 bg-[#d4af37]/10 px-3 py-2 text-right">
+              <p className="text-[10px] font-bold text-gray-400">卓</p>
+              <p className="text-lg font-black text-[#f8e7a2]">{tableId}</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            {cartItems.map(({ product, quantity }) => (
+              <div key={product.id} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-black/35 p-3">
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-white">{product.name}</p>
+                  <p className="text-xs text-gray-500">{product.price.toLocaleString()} pt x {quantity}</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => removeFromCart(product.id)}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-gray-300"
+                  aria-label={`${product.name}を1点減らす`}
+                >
+                  <Minus size={15} />
+                </button>
+              </div>
+            ))}
+            {normalCocktails.map(item => (
+              <div key={item.id} className="flex items-center gap-3 rounded-2xl border border-[#d4af37]/25 bg-[#d4af37]/8 p-3">
+                <Sparkles size={17} className="shrink-0 text-[#d4af37]" />
+                <div className="min-w-0 flex-1">
+                  <p className="truncate text-sm font-black text-white">{formatNormalCocktailOptions(item)}</p>
+                  <p className="text-xs text-gray-500">普通カクテル x {item.quantity}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
       <div className="sticky bottom-28 z-20">
         <button
           onClick={handleOrder}
@@ -448,6 +558,43 @@ export function CustomerOrderPage() {
           {isSubmitting ? '登録中...' : `${totalItems}点 / ${totalAmount.toLocaleString()} pt 登録`}
         </button>
       </div>
+
+      {selectedRecipe && (
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/70 p-3 backdrop-blur-sm sm:items-center">
+          <div className="iphone-card max-h-[86vh] w-full max-w-lg overflow-hidden border-[#d4af37]/40">
+            <div className="flex items-start justify-between gap-3 border-b border-white/10 p-4">
+              <div className="min-w-0">
+                <p className="text-[11px] font-black uppercase tracking-[0.25em] text-[#d4af37]">Recipe</p>
+                <h3 className="mt-1 truncate text-lg font-black text-white">{selectedRecipe.title}</h3>
+                {selectedRecipe.category && <p className="mt-1 text-xs text-gray-500">{selectedRecipe.category}</p>}
+              </div>
+              <button
+                type="button"
+                onClick={() => setSelectedRecipe(null)}
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-gray-300"
+                aria-label="レシピを閉じる"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="max-h-[68vh] space-y-4 overflow-y-auto p-4">
+              {selectedRecipe.recommendationText && (
+                <div className="rounded-2xl border border-[#d4af37]/30 bg-[#d4af37]/10 p-3 text-sm font-bold text-[#f8e7a2]">
+                  {selectedRecipe.recommendationText}
+                </div>
+              )}
+              <pre className="whitespace-pre-wrap rounded-2xl border border-white/10 bg-black/45 p-4 font-sans text-sm leading-7 text-gray-200">
+                {selectedRecipe.recipeText}
+              </pre>
+              {selectedRecipe.notes && (
+                <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-3 text-xs leading-6 text-gray-400">
+                  <span className="font-bold text-gray-300">メモ: </span>{selectedRecipe.notes}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

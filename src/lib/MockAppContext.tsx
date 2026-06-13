@@ -783,8 +783,10 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!isAuthReady) return;
+    const hasFirebaseAuthSession = Boolean(auth.currentUser?.uid);
     const canViewRecipeMirror =
       !!currentUser &&
+      hasFirebaseAuthSession &&
       ['admin', 'staff', 'cast'].includes(currentUser.role) &&
       currentUser.approvalStatus === 'approved' &&
       !currentUser.isDeleted;
@@ -1177,7 +1179,28 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
         throw new Error('商品情報が不正です。');
       }
     });
-    const totalAmount = orderData.items.reduce((sum, item) => sum + (item.priceSnapshot * item.quantity), 0);
+    const normalizedItems = orderData.items.map((item): OrderItem => {
+      if (item.itemType !== 'product') return item;
+
+      const product = products.find(candidate => candidate.id === item.productId)
+        || products.find(candidate => candidate.name.trim() === item.productName.trim());
+      const recipeMirror = product?.id ? productRecipes[product.id] : undefined;
+      const recipeText = (item.recipeTextSnapshot || recipeMirror?.recipeText || product?.recipeText || '').trim();
+      const notes = (item.notesSnapshot || recipeMirror?.notes || product?.notes || '').trim();
+      const recommendationText = (item.recommendationTextSnapshot || recipeMirror?.recommendationText || product?.recommendationText || '').trim();
+
+      return {
+        ...item,
+        productId: product?.id || item.productId,
+        productName: product?.name || item.productName,
+        priceSnapshot: product?.price ?? item.priceSnapshot,
+        categorySnapshot: product?.category || item.categorySnapshot,
+        recipeTextSnapshot: recipeText,
+        notesSnapshot: notes,
+        recommendationTextSnapshot: recommendationText,
+      };
+    });
+    const totalAmount = normalizedItems.reduce((sum, item) => sum + (item.priceSnapshot * item.quantity), 0);
     const id = Math.random().toString(36).substring(7);
     
     // Rule: Match order table to cast table if cast is selected
@@ -1188,6 +1211,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
 
     const newOrder: Order = { 
       ...orderData, 
+      items: normalizedItems,
       tableId: finalTableId,
       tableNameSnapshot: finalTableId, // In this system IDs are used as names for simple tables
       id, 
@@ -1240,7 +1264,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
       });
     };
 
-    if (isRecipeMirrorDisabled) {
+    if (isRecipeMirrorDisabled || !auth.currentUser?.uid) {
       applyRecipeMirrorState();
       return;
     }
