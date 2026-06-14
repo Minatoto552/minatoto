@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { AlertTriangle, BellRing, LogOut, User, Wine } from 'lucide-react';
+import { AlertTriangle, BellRing, LogOut, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useMockApp, type EventStatus } from '../../lib/MockAppContext';
 import { getEmployeeNavigation } from '../../hooks/useRoleNavigation';
@@ -8,6 +8,8 @@ import { getRotationLabel } from '../../hooks/usePlacements';
 import { EmergencyCallNotification } from '../ui/EmergencyCallNotification';
 import { EmergencyHelpButton } from '../ui/EmergencyHelpButton';
 import { CollapsibleBottomNav } from './CollapsibleBottomNav';
+import { ProfileAvatar } from '../ui/ProfileAvatar';
+import { AppleBarScene } from '../visual/AppleBarScene';
 
 const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   before_open: '営業前',
@@ -109,6 +111,7 @@ export function AppLayout() {
 
   return (
     <div className="app-shell min-h-screen text-[#e0e0e0] font-sans">
+      <AppleBarScene />
       <EmergencyCallNotification />
       <EmergencyHelpButton />
 
@@ -150,13 +153,12 @@ export function AppLayout() {
               </Link>
             )}
             <Link to="/app/profile" className="flex h-11 items-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-2.5">
-              {currentUser.iconUrl ? (
-                <img src={currentUser.iconUrl} alt="" className="h-8 w-8 rounded-xl object-cover" />
-              ) : (
-                <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-[#d4af37]">
-                  <User size={16} />
-                </div>
-              )}
+              <ProfileAvatar
+                src={currentUser.iconUrl}
+                name={currentUser.displayName}
+                version={currentUser.profileImageUpdatedAt}
+                className="h-8 w-8 rounded-xl"
+              />
               <span className="hidden max-w-[120px] truncate text-xs font-bold text-white sm:block">{currentUser.displayName}</span>
             </Link>
             <button type="button" onClick={handleLogout} className="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.04] text-gray-400">

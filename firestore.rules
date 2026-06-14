@@ -52,7 +52,7 @@ service cloud.firestore {
       allow update: if isSelf(userId)
         && hasNoPasswordFields()
         && request.resource.data.diff(resource.data).affectedKeys()
-          .hasOnly(['displayName', 'vrcName', 'iconUrl', 'userCode', 'updatedAt']);
+          .hasOnly(['displayName', 'vrcName', 'iconUrl', 'userCode', 'profileImageUpdatedAt', 'updatedAt']);
 
       allow delete: if false;
     }

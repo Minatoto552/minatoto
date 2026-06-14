@@ -16,6 +16,7 @@ export interface UserProfile {
   displayName: string;
   vrcName: string;
   iconUrl: string;
+  profileImageUpdatedAt?: Date;
   role: UserRole;
   requestedRole: 'staff' | 'cast' | 'admin' | null;
   canCreateOrder: boolean;
@@ -1160,7 +1161,16 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
       const exists = users.find(u => u.userCode === updates.userCode && u.id !== userId);
       if (exists) throw new Error('このID (user_code) は既に使用されています');
     }
-    await updateDoc(doc(db, 'users', userId), updates);
+    const targetUser = users.find(user => user.id === userId);
+    const normalizedUpdates = {
+      ...updates,
+      iconUrl: updates.iconUrl?.trim() ?? updates.iconUrl,
+      updatedAt: new Date(),
+      ...(updates.iconUrl !== undefined && updates.iconUrl.trim() !== (targetUser?.iconUrl || '').trim()
+        ? { profileImageUpdatedAt: new Date() }
+        : {}),
+    };
+    await updateDoc(doc(db, 'users', userId), normalizedUpdates);
   };
 
   const addOrder = async (orderData: Omit<Order, 'id' | 'createdAt' | 'status' | 'updatedAt' | 'isDeleted' | 'totalAmount' | 'tableNameSnapshot'>) => {

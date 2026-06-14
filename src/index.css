@@ -161,13 +161,46 @@ button, a, input, select, textarea {
 
 .app-shell {
   background:
-    radial-gradient(circle at 50% -10%, rgba(212, 175, 55, 0.18), transparent 34rem),
-    radial-gradient(circle at 12% 18%, rgba(123, 17, 19, 0.2), transparent 24rem),
-    linear-gradient(180deg, rgba(5, 7, 12, 0.92), rgba(5, 5, 5, 0.98)),
+    linear-gradient(180deg, rgba(7, 11, 20, 0.86), rgba(5, 5, 5, 0.98)),
     url("https://images.unsplash.com/photo-1514933651103-005eec06c04b?auto=format&fit=crop&w=1800&q=80");
   background-attachment: fixed;
   background-position: center;
   background-size: cover;
+}
+
+.app-shell::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, rgba(5, 7, 12, 0.88), rgba(5, 7, 12, 0.42) 48%, rgba(5, 7, 12, 0.92)),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent 38%, rgba(0, 0, 0, 0.66));
+}
+
+.apple-3d-stage {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  opacity: 0.82;
+  mix-blend-mode: screen;
+}
+
+.apple-3d-stage canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+@media (max-width: 640px) {
+  .apple-3d-stage {
+    opacity: 0.52;
+    transform: translateX(22%) scale(1.06);
+    transform-origin: center;
+  }
 }
 
 .app-home-space {

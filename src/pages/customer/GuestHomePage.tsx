@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, BellRing, BookOpen, Sparkles, Star, Ticket, UserCircle, Users, Wine, type LucideIcon } from 'lucide-react';
+import { ArrowRight, BellRing, BookOpen, Star, Ticket, UserCircle, Users, Wine, type LucideIcon } from 'lucide-react';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 import { cn } from '../../lib/utils';
 import { useMockApp } from '../../lib/MockAppContext';
 import { getRotationLabel, usePlacements } from '../../hooks/usePlacements';
@@ -88,13 +89,12 @@ export function GuestHomePage() {
             {visibleCasts.map(cast => (
               <div key={cast.id} className="rounded-3xl border border-white/10 bg-white/[0.04] p-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-2xl border border-[#d4af37]/40 bg-[#d4af37]/10">
-                    {cast.iconUrl ? (
-                      <img src={cast.iconUrl} alt="" className="h-full w-full object-cover" />
-                    ) : (
-                      <Sparkles className="text-[#d4af37]" size={18} />
-                    )}
-                  </div>
+                  <ProfileAvatar
+                    src={cast.iconUrl}
+                    name={cast.displayName}
+                    version={cast.profileImageUpdatedAt}
+                    className="h-11 w-11 shrink-0 rounded-2xl border border-[#d4af37]/40 bg-[#d4af37]/10"
+                  />
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold text-white">{cast.displayName}</p>
                     <p className="text-xs text-gray-500">{cast.tableNumber}卓</p>

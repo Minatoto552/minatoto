@@ -18,6 +18,7 @@ export interface UnifiedPlacement {
   displayName: string;
   role: UserProfile['role'];
   iconUrl?: string;
+  profileImageUpdatedAt?: Date;
   positionType: PlacementType;
   rotation: RotationNumber;
   rotationLabel: string;
@@ -109,6 +110,7 @@ export function usePlacements(selectedRotation?: RotationNumber) {
           displayName: user.displayName,
           role: user.role,
           iconUrl: user.iconUrl,
+          profileImageUpdatedAt: user.profileImageUpdatedAt,
           positionType: 'cast',
           rotation: assignment.rotationNumber,
           rotationLabel: getRotationLabel(assignment.rotationNumber),
@@ -135,6 +137,7 @@ export function usePlacements(selectedRotation?: RotationNumber) {
         displayName: user.displayName,
         role: user.role,
         iconUrl: user.iconUrl,
+        profileImageUpdatedAt: user.profileImageUpdatedAt,
         positionType: 'staff',
         rotation,
         rotationLabel: getRotationLabel(rotation),
@@ -172,6 +175,7 @@ export function usePlacements(selectedRotation?: RotationNumber) {
         displayName: staff.displayName,
         role: staff.role,
         iconUrl: staff.iconUrl,
+        profileImageUpdatedAt: staff.profileImageUpdatedAt,
         positionType: 'staff',
         rotation: activeRotation,
         rotationLabel: getRotationLabel(activeRotation),

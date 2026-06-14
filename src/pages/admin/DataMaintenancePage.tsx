@@ -3,6 +3,7 @@ import { useMockApp, HistoryResetLog } from '../../lib/MockAppContext';
 import { Database, AlertTriangle, ShieldAlert, History, ChevronLeft, Trash2, Calendar, CheckCircle2, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function DataMaintenancePage() {
   const { resetHistory, historyResetLogs, orders, announcements, emergencyCalls, rotationStatusHistory, users } = useMockApp();
@@ -286,9 +287,13 @@ const sortedLogs = [...historyResetLogs].sort(
                     )}
 
                     <div className="flex items-center gap-2 pt-1 border-t border-white/5 mt-1">
-                      <div className="w-5 h-5 rounded-full bg-white/10 overflow-hidden border border-white/20">
-                        {executor?.iconUrl && <img src={executor.iconUrl} className="w-full h-full object-cover" />}
-                      </div>
+                      <ProfileAvatar
+                        src={executor?.iconUrl}
+                        name={executor?.displayName}
+                        version={executor?.profileImageUpdatedAt}
+                        className="h-5 w-5 rounded-full border border-white/20 bg-white/10"
+                        fallbackClassName="text-[8px]"
+                      />
                       <span className="text-[10px] text-gray-500">
                         Executed by <span className="text-white">{executor?.displayName || 'Unknown'}</span>
                       </span>
@@ -308,4 +313,3 @@ const sortedLogs = [...historyResetLogs].sort(
     </div>
   );
 }
-    

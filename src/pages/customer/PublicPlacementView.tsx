@@ -4,6 +4,7 @@ import { Edit3, LayoutGrid, ListFilter, MapPin, RefreshCw, Shield, Users } from 
 import { cn } from '../../lib/utils';
 import { TABLES, type RotationNumber, useMockApp } from '../../lib/MockAppContext';
 import { getRotationLabel, usePlacements, type UnifiedPlacement } from '../../hooks/usePlacements';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 const ROTATIONS: RotationNumber[] = [0, 1, 2, 3, 4];
 
@@ -224,16 +225,16 @@ function RoleSection({
 function PlacementRow({ placement, compact }: { placement: UnifiedPlacement; compact?: boolean }) {
   return (
     <div className="flex items-center gap-3 min-w-0">
-      <div className={cn(
-        'w-10 h-10 rounded-2xl border flex items-center justify-center overflow-hidden shrink-0',
-        placement.positionType === 'staff' ? 'border-sky-300/40 bg-sky-400/10' : 'border-[#d4af37]/40 bg-[#d4af37]/10',
-      )}>
-        {placement.iconUrl ? (
-          <img src={placement.iconUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-sm font-black text-white">{placement.displayName.slice(0, 1)}</span>
+      <ProfileAvatar
+        src={placement.iconUrl}
+        name={placement.displayName}
+        version={placement.profileImageUpdatedAt}
+        className={cn(
+          'h-10 w-10 shrink-0 rounded-2xl border',
+          placement.positionType === 'staff' ? 'border-sky-300/40 bg-sky-400/10' : 'border-[#d4af37]/40 bg-[#d4af37]/10',
         )}
-      </div>
+        fallbackClassName="text-white"
+      />
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
           <p className="truncate text-sm font-bold text-white">{placement.displayName}</p>

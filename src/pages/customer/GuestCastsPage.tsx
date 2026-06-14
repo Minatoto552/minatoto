@@ -1,8 +1,9 @@
 import React from 'react';
 import { useMockApp } from '../../lib/MockAppContext';
-import { Users, Wine } from 'lucide-react';
+import { Users } from 'lucide-react';
 import { cn, getBusinessDate } from '../../lib/utils';
 import { RotationLabel } from '../../components/ui/RotationLabel';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function GuestCastsPage() {
   const { users, rotationAssignments, getCastCurrentTable, eventStatus, currentRotationNumber, attendanceRequests, shiftRequests } = useMockApp();
@@ -78,13 +79,13 @@ export function GuestCastsPage() {
                   </div>
                 )}
                 <div className="aspect-square bg-black border-b border-white/10 relative overflow-hidden group">
-                  {cast.iconUrl ? (
-                    <img src={cast.iconUrl} alt={cast.displayName} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" loading="lazy" />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-900">
-                       <Wine size={48} className="text-[#d4af37]/30" />
-                    </div>
-                  )}
+                  <ProfileAvatar
+                    src={cast.iconUrl}
+                    name={cast.displayName}
+                    version={cast.profileImageUpdatedAt}
+                    className="h-full w-full rounded-none bg-gray-900 transition-transform duration-700 group-hover:scale-105"
+                    fallbackClassName="text-5xl text-[#d4af37]/50"
+                  />
                   <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent"></div>
                   <div className="absolute bottom-4 left-4 right-4">
                     <h3 className="font-bold text-white text-2xl drop-shadow-md">{cast.displayName}</h3>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useMockApp, StaffTaskType, STAFF_TASK_LABELS, EventStatus } from '../../lib/MockAppContext';
 import { Users, CheckCircle, Copy } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function StaffTaskManagerPage() {
   const { users, staffTasks, updateStaffTasks } = useMockApp();
@@ -116,13 +117,13 @@ export function StaffTaskManagerPage() {
             return (
               <div key={staff.id} className="glass-panel p-5 rounded-xl border border-white/10">
                 <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-full border border-[#d4af37]/50 overflow-hidden bg-black flex items-center justify-center">
-                    {staff.iconUrl ? (
-                      <img src={staff.iconUrl} alt="icon" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-xs text-gray-500">S</span>
-                    )}
-                  </div>
+                  <ProfileAvatar
+                    src={staff.iconUrl}
+                    name={staff.displayName}
+                    version={staff.profileImageUpdatedAt}
+                    className="h-10 w-10 rounded-full border border-[#d4af37]/50 bg-black"
+                    fallbackClassName="text-xs text-gray-500"
+                  />
                   <div>
                     <h4 className="font-bold text-white text-lg">{staff.displayName}</h4>
                     <p className="text-xs text-gray-400">@{staff.userCode}</p>

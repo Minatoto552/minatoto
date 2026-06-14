@@ -24,6 +24,7 @@ import {
 import { cn } from '../../lib/utils';
 import { useMockApp, type EventStatus } from '../../lib/MockAppContext';
 import { getRotationLabel, type TablePlacementSummary, type UnifiedPlacement, usePlacements } from '../../hooks/usePlacements';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
   before_open: '営業前',
@@ -367,7 +368,6 @@ function PlacementPerson({
   large?: boolean;
   muted?: boolean;
 }) {
-  const initials = placement.displayName.slice(0, 1).toUpperCase();
   const isStaff = placement.positionType === 'staff';
 
   return (
@@ -377,11 +377,13 @@ function PlacementPerson({
         large ? 'w-14 h-14' : 'w-10 h-10',
         isStaff ? 'border-sky-300/40 bg-sky-400/10' : 'border-[#d4af37]/45 bg-[#d4af37]/10',
       )}>
-        {placement.iconUrl ? (
-          <img src={placement.iconUrl} alt="" className="w-full h-full object-cover" />
-        ) : (
-          <span className={cn('font-black', isStaff ? 'text-sky-200' : 'text-[#d4af37]')}>{initials}</span>
-        )}
+        <ProfileAvatar
+          src={placement.iconUrl}
+          name={placement.displayName}
+          version={placement.profileImageUpdatedAt}
+          className="h-full w-full"
+          fallbackClassName={cn('font-black', isStaff ? 'text-sky-200' : 'text-[#d4af37]')}
+        />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 min-w-0">

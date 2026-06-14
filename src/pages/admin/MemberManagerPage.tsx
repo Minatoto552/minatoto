@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useMockApp, UserProfile } from '../../lib/MockAppContext';
 import { Search, Star, Award, UserCheck, Shield, Check, Plus, Minus, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function MemberManagerPage() {
   const { users, customerStamps, giveStamp, adjustPoints, deleteCustomerMember, restoreCustomerMember, hardDeleteCustomerMember, currentUser, rotationAssignments, staffTasks, updateUserPermission } = useMockApp();
@@ -424,9 +425,13 @@ export function MemberManagerPage() {
              return (
                <div key={member.id} className={cn("glass-panel p-4 rounded-xl border flex flex-col sm:flex-row justify-between gap-4", member.isDeleted ? "border-red-500/20 opacity-80" : "border-white/10")}>
                  <div className="flex items-start gap-4">
-                   <div className="w-12 h-12 bg-black border border-white/20 rounded-full overflow-hidden flex items-center justify-center shrink-0">
-                     {member.iconUrl ? <img src={member.iconUrl} alt="icon" className="w-full h-full object-cover" /> : <span className="text-gray-500">M</span>}
-                   </div>
+                   <ProfileAvatar
+                     src={member.iconUrl}
+                     name={member.displayName}
+                     version={member.profileImageUpdatedAt}
+                     className="h-12 w-12 shrink-0 rounded-full border border-white/20 bg-black"
+                     fallbackClassName="text-gray-500"
+                   />
                    <div>
                      <div className="flex items-center gap-2 mb-1">
                        <span className="font-bold text-white text-lg">{member.displayName}</span>
