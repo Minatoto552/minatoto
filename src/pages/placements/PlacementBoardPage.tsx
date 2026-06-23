@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Edit3, LayoutGrid, ListFilter, MapPin, RefreshCw, Shield, Users } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { TABLES, type RotationNumber, useMockApp } from '../../lib/MockAppContext';
+import { TABLES, type RotationNumber, useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { getRotationLabel, usePlacements, type UnifiedPlacement } from '../../hooks/usePlacements';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 const ROTATIONS: RotationNumber[] = [0, 1, 2, 3, 4];
 
-export function PublicPlacementView() {
-  const { currentUser, currentRotationNumber, eventStatus } = useMockApp();
+export function PlacementBoardPage() {
+  const { currentUser, currentRotationNumber, eventStatus } = useVrcBarApp();
   const [selectedRotation, setSelectedRotation] = useState<RotationNumber>(currentRotationNumber ?? 0);
   const [viewMode, setViewMode] = useState<'table' | 'role'>('table');
   const {

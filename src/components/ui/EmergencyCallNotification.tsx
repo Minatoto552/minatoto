@@ -1,5 +1,5 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { AlertTriangle, CheckCircle, XCircle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { TableNumberLabel } from './TableNumberLabel';
@@ -7,7 +7,7 @@ import { TableNumberLabel } from './TableNumberLabel';
 const getCallTime = (call: { calledAt?: Date; createdAt: Date }) => new Date(call.calledAt || call.createdAt);
 
 export function EmergencyCallNotification() {
-  const { emergencyCalls, currentUser, handleEmergencyCall, cancelEmergencyCall } = useMockApp();
+  const { emergencyCalls, currentUser, handleEmergencyCall, cancelEmergencyCall } = useVrcBarApp();
   const activeCalls = [...emergencyCalls]
     .filter(c => c.status === 'active')
     .sort((a, b) => getCallTime(b).getTime() - getCallTime(a).getTime());

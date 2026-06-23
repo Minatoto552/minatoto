@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useMockApp, StaffTaskType, STAFF_TASK_LABELS, EventStatus } from '../../lib/MockAppContext';
+import { useVrcBarApp, StaffTaskType, STAFF_TASK_LABELS, EventStatus } from '../../lib/VrcBarAppContext';
 import { Users, CheckCircle, Copy } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function StaffTaskManagerPage() {
-  const { users, staffTasks, updateStaffTasks } = useMockApp();
+  const { users, staffTasks, updateStaffTasks } = useVrcBarApp();
   const staffs = users.filter(u => (u.role === 'staff' || u.role === 'admin') && !u.isDeleted);
 
   const TABS: { id: EventStatus, label: string }[] = [

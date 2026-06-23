@@ -1,10 +1,10 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { BookOpen, MessageCircle, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function GuestMenuPage() {
-  const { products } = useMockApp();
+  const { products } = useVrcBarApp();
 
   const available = (products || []).filter(p => p.isAvailable && !p.isDeleted);
   const byCategory: Record<string, typeof available> = {};

@@ -1,9 +1,9 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Clock, LogOut } from 'lucide-react';
 
 export function PendingPage() {
-  const { currentUser, logout } = useMockApp();
+  const { currentUser, logout } = useVrcBarApp();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center animate-in fade-in duration-500">

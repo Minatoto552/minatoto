@@ -349,7 +349,7 @@ export interface LotteryEntry {
   enteredAt: Date;
 }
 
-export interface MockAppContextType {
+export interface VrcBarAppContextType {
   currentUser: UserProfile | null;
   users: UserProfile[];
   products: Product[];
@@ -566,7 +566,7 @@ const generateInitialAssignments = (): RotationAssignment[] => {
 
 const initialStaffTasks: StaffTaskAssignment[] = [];
 
-const MockAppContext = createContext<MockAppContextType | undefined>(undefined);
+const VrcBarAppContext = createContext<VrcBarAppContextType | undefined>(undefined);
 
 enum OperationType {
   CREATE = 'create',
@@ -604,7 +604,7 @@ function handleFirestoreError(error: unknown, operationType: OperationType, path
   console.error('Firestore Error: ', JSON.stringify(errInfo));
 }
 
-export function MockAppProvider({ children }: { children: ReactNode }) {
+export function VrcBarAppProvider({ children }: { children: ReactNode }) {
   const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
@@ -2170,7 +2170,7 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
   }, [currentUser, emergencyCalls]);
 
   return (
-    <MockAppContext.Provider value={{
+    <VrcBarAppContext.Provider value={{
       currentUser, users: visibleUsers, products: visibleProducts, orders: visibleOrders, eventStatus, currentRotationNumber, rotationAssignments,
       staffTasks, announcements: visibleAnnouncements, rotationStatusHistory, userDeleteLogs, emergencyCalls: visibleEmergencyCalls, historyResetLogs,
       customerStamps: visibleCustomerStamps, lotteryItems, lotteryEntries: visibleLotteryEntries, gameSessions: visibleGameSessions, attendanceRequests, shiftRequests, chinchiroSettings,
@@ -2185,12 +2185,12 @@ export function MockAppProvider({ children }: { children: ReactNode }) {
       addLotteryItem, updateLotteryItem, deleteLotteryItem, enterLottery, executeLotteryDraw
     }}>
       {children}
-    </MockAppContext.Provider>
+    </VrcBarAppContext.Provider>
   );
 }
 
-export function useMockApp() {
-  const context = useContext(MockAppContext);
-  if (!context) throw new Error("useMockApp must be used within MockAppProvider");
+export function useVrcBarApp() {
+  const context = useContext(VrcBarAppContext);
+  if (!context) throw new Error("useVrcBarApp must be used within VrcBarAppProvider");
   return context;
 }

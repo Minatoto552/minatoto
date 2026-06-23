@@ -22,7 +22,7 @@ import {
   type LucideIcon,
 } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useMockApp, type EventStatus } from '../../lib/MockAppContext';
+import { useVrcBarApp, type EventStatus } from '../../lib/VrcBarAppContext';
 import { getRotationLabel, type TablePlacementSummary, type UnifiedPlacement, usePlacements } from '../../hooks/usePlacements';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
@@ -43,8 +43,8 @@ const ROLE_LABELS = {
   pending: '承認待ち',
 };
 
-export function DashboardHome() {
-  const { currentUser } = useMockApp();
+export function RoleDashboardPage() {
+  const { currentUser } = useVrcBarApp();
 
   if (currentUser?.role === 'admin') return <AdminHome />;
   if (currentUser?.role === 'staff') return <StaffHome />;
@@ -68,7 +68,7 @@ function AdminHome() {
     announcements,
     attendanceRequests,
     shiftRequests,
-  } = useMockApp();
+  } = useVrcBarApp();
   const { activeRotation, currentCastPlacements, currentStaffPlacements, tableSummaries } = usePlacements();
 
   const pendingOrders = orders.filter(order => !order.isDeleted && order.status === 'pending');
@@ -122,7 +122,7 @@ function AdminHome() {
 }
 
 function StaffHome() {
-  const { currentUser, orders, emergencyCalls, eventStatus, currentRotationNumber } = useMockApp();
+  const { currentUser, orders, emergencyCalls, eventStatus, currentRotationNumber } = useVrcBarApp();
   const {
     currentCastPlacements,
     currentStaffPlacements,
@@ -195,7 +195,7 @@ function StaffHome() {
 }
 
 function CastHome() {
-  const { currentUser, currentRotationNumber, eventStatus, announcements } = useMockApp();
+  const { currentUser, currentRotationNumber, eventStatus, announcements } = useVrcBarApp();
   const { getUserCurrentPlacements, tableSummaries, currentStaffPlacements } = usePlacements();
   const myPlacements = currentUser ? getUserCurrentPlacements(currentUser.id) : [];
   const mainPlacement = myPlacements.find(placement => placement.positionType === 'cast') || myPlacements[0];

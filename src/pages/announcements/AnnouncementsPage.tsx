@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useMockApp, Announcement } from '../../lib/MockAppContext';
+import { useVrcBarApp, Announcement } from '../../lib/VrcBarAppContext';
 import { Megaphone, Search, Filter, Calendar, ChevronLeft, AlertTriangle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 
 export function AnnouncementsPage() {
-  const { announcements } = useMockApp();
+  const { announcements } = useVrcBarApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
 

@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useMockApp, EmergencyCall } from '../../lib/MockAppContext';
+import { useVrcBarApp, EmergencyCall } from '../../lib/VrcBarAppContext';
 import { History, Table, User, Clock, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { TableNumberLabel } from '../../components/ui/TableNumberLabel';
 import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 
 export function EmergencyCallHistoryPage() {
-  const { emergencyCalls, users } = useMockApp();
+  const { emergencyCalls, users } = useVrcBarApp();
   const [filter, setFilter] = useState<'all' | 'active' | 'handled' | 'canceled'>('all');
   const scrollRef = useDraggableScroll<HTMLDivElement>();
 

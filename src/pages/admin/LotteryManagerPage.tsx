@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useMockApp, LotteryItem } from '../../lib/MockAppContext';
+import { useVrcBarApp, LotteryItem } from '../../lib/VrcBarAppContext';
 import { Ticket, Plus, Trash2, Edit2, PlayCircle, Trophy, RefreshCcw } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function LotteryManagerPage() {
-  const { lotteryItems, lotteryEntries, addLotteryItem, updateLotteryItem, deleteLotteryItem, executeLotteryDraw, currentUser } = useMockApp();
+  const { lotteryItems, lotteryEntries, addLotteryItem, updateLotteryItem, deleteLotteryItem, executeLotteryDraw, currentUser } = useVrcBarApp();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [editForm, setEditForm] = useState<Partial<LotteryItem>>({});

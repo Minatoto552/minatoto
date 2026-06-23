@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useMockApp, UserProfile } from '../../lib/MockAppContext';
+import { useVrcBarApp, UserProfile } from '../../lib/VrcBarAppContext';
 import { Search, Star, Award, UserCheck, Shield, Check, Plus, Minus, Trash2, RotateCcw, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function MemberManagerPage() {
-  const { users, customerStamps, giveStamp, adjustPoints, deleteCustomerMember, restoreCustomerMember, hardDeleteCustomerMember, currentUser, rotationAssignments, staffTasks, updateUserPermission } = useMockApp();
+  const { users, customerStamps, giveStamp, adjustPoints, deleteCustomerMember, restoreCustomerMember, hardDeleteCustomerMember, currentUser, rotationAssignments, staffTasks, updateUserPermission } = useVrcBarApp();
   const [searchTerm, setSearchTerm] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [successMsg, setSuccessMsg] = useState<string | null>(null);

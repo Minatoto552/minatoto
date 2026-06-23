@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-import { useMockApp, Announcement, AnnouncementTarget, AnnouncementType } from '../../lib/MockAppContext';
+import { useVrcBarApp, Announcement, AnnouncementTarget, AnnouncementType } from '../../lib/VrcBarAppContext';
 import { Bell, Megaphone, Clock, Trash2, Edit } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 
 export function AnnouncementManagerPage() {
-  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useMockApp();
+  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useVrcBarApp();
   
   const [activeTab, setActiveTab] = useState<'create' | 'active'>('create');
   const scrollRef = useDraggableScroll<HTMLDivElement>();

@@ -1,10 +1,10 @@
 import React, { useMemo, useState } from 'react';
 import { Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, Sparkles, Star, Trophy, Zap, type LucideIcon } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useMockApp, type GameSession } from '../../lib/MockAppContext';
+import { useVrcBarApp, type GameSession } from '../../lib/VrcBarAppContext';
 
 export function GuestGamePage() {
-  const { gameSessions, currentUser, startChinchiroGame, users, chinchiroSettings, customerStamps } = useMockApp();
+  const { gameSessions, currentUser, startChinchiroGame, users, chinchiroSettings, customerStamps } = useVrcBarApp();
   const [selectedStaff, setSelectedStaff] = useState('');
   const [betPoints, setBetPoints] = useState(10);
   const [errorMsg, setErrorMsg] = useState('');

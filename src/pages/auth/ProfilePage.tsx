@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { CheckCircle2, Image as ImageIcon, Save, UserRound } from 'lucide-react';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 
 export function ProfilePage() {
-  const { currentUser, updateProfile } = useMockApp();
+  const { currentUser, updateProfile } = useVrcBarApp();
 
   const [displayName, setDisplayName] = useState('');
   const [iconUrl, setIconUrl] = useState('');

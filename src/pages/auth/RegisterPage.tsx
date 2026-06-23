@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Wine, ArrowLeft } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function RegisterPage() {
-  const { register } = useMockApp();
+  const { register } = useVrcBarApp();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 

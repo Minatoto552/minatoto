@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMockApp, UserProfile, UserRole, TABLES } from '../../lib/MockAppContext';
+import { useVrcBarApp, UserProfile, UserRole, TABLES } from '../../lib/VrcBarAppContext';
 import { ShieldAlert, Users, Grid, History, Check, X, Shield, Lock, Unlock, List, Trash2, Undo, RefreshCw, ClipboardList, Megaphone, AlertTriangle, Database, Ticket, Star, Settings } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { MenuEditorPage } from './MenuEditorPage';
@@ -18,7 +18,7 @@ import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 import { formatOrderItemLine } from '../../lib/orderUtils';
 
 export function AdminPage() {
-  const { orders, users, updateUserPermission, currentUser, restoreOrder, emergencyCalls, chinchiroSettings, updateChinchiroSettings } = useMockApp();
+  const { orders, users, updateUserPermission, currentUser, restoreOrder, emergencyCalls, chinchiroSettings, updateChinchiroSettings } = useVrcBarApp();
   const [activeTab, setActiveTab] = useState<'overview' | 'staff' | 'member' | 'rotation' | 'attendance' | 'staff_tasks' | 'announcement' | 'timed_announcement' | 'menu' | 'lottery' | 'history' | 'deleted' | 'emergency' | 'maintenance' | 'settings'>('overview');
   const scrollRef = useDraggableScroll<HTMLDivElement>();
 

@@ -10,7 +10,7 @@ import {
   UserCircle,
   type LucideIcon,
 } from 'lucide-react';
-import { type UserRole } from '../lib/MockAppContext';
+import { type UserRole } from '../lib/VrcBarAppContext';
 
 export interface RoleNavItem {
   path: string;

@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { OpeningLogo } from './OpeningLogo';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 
 export function OpeningAnimation() {
   const navigate = useNavigate();
-  const { currentUser, setHasSeenOpening } = useMockApp();
+  const { currentUser, setHasSeenOpening } = useVrcBarApp();
 
 
   const [isSkipped, setIsSkipped] = useState(false);

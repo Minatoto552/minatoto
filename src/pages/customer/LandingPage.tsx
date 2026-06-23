@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Wine, Users, User } from 'lucide-react';
 
 export function LandingPage() {
-  const { currentUser, isAuthReady, isProfileLoading, hasSeenOpening } = useMockApp();
+  const { currentUser, isAuthReady, isProfileLoading, hasSeenOpening } = useVrcBarApp();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
 

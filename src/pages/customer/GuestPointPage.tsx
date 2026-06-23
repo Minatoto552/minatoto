@@ -1,10 +1,10 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Star, Trophy, Coins } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function GuestPointPage() {
-  const { customerStamps, currentUser } = useMockApp();
+  const { customerStamps, currentUser } = useVrcBarApp();
 
   const myStamps = (customerStamps || []).filter(s => s.customerMemberId === currentUser?.id);
 

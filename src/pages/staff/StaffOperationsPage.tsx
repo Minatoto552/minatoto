@@ -1,12 +1,12 @@
 import React from 'react';
-import { useMockApp, type OrderItem } from '../../lib/MockAppContext';
+import { useVrcBarApp, type OrderItem } from '../../lib/VrcBarAppContext';
 import { BookOpen, Crown, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6, LayoutDashboard, ShoppingBag, Users, AlertTriangle, Star, Sparkles, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { Link } from 'react-router-dom';
 import { formatOrderItemTitle } from '../../lib/orderUtils';
 
-export function StaffDashboardPage() {
-  const { orders, users, products, emergencyCalls, currentUser, updateOrderStatus, gameSessions, rollEmployeeChinchiro } = useMockApp();
+export function StaffOperationsPage() {
+  const { orders, users, products, emergencyCalls, currentUser, updateOrderStatus, gameSessions, rollEmployeeChinchiro } = useVrcBarApp();
   const [statusFilter, setStatusFilter] = React.useState<'active' | 'pending' | 'processing' | 'completed' | 'delivered' | 'all'>('active');
   const [rollingGameId, setRollingGameId] = React.useState<string | null>(null);
   const [recipePreview, setRecipePreview] = React.useState<{

@@ -1,7 +1,8 @@
 {
-  "name": "react-example",
+  "name": "vrc-bar-operations-app",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Mobile-first VRC bar operations application for NAKIYA_BAR.",
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0 --port 5173",

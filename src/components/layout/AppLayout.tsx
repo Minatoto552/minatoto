@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { AlertTriangle, BellRing, LogOut, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useMockApp, type EventStatus } from '../../lib/MockAppContext';
+import { useVrcBarApp, type EventStatus } from '../../lib/VrcBarAppContext';
 import { getEmployeeNavigation } from '../../hooks/useRoleNavigation';
 import { getRotationLabel } from '../../hooks/usePlacements';
 import { EmergencyCallNotification } from '../ui/EmergencyCallNotification';
@@ -30,7 +30,7 @@ export function AppLayout() {
     eventStatus,
     announcements,
     emergencyCalls,
-  } = useMockApp();
+  } = useVrcBarApp();
   const navigate = useNavigate();
   const location = useLocation();
 

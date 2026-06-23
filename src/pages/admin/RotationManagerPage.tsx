@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useMockApp, RotationNumber, EventStatus, TABLES } from '../../lib/MockAppContext';
+import { useVrcBarApp, RotationNumber, EventStatus, TABLES } from '../../lib/VrcBarAppContext';
 import { RefreshCw, Users, Settings, Save, AlertTriangle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { RotationTab } from '../../components/ui/RotationTab';
@@ -19,7 +19,7 @@ const EVENT_STATUS_LABELS: Record<EventStatus, string> = {
 const getStatusLabel = (status: EventStatus) => EVENT_STATUS_LABELS[status];
 
 export function RotationManagerPage() {
-  const { eventStatus, currentRotationNumber, updateEventStatus, rotationAssignments, updateRotationAssignment, users } = useMockApp();
+  const { eventStatus, currentRotationNumber, updateEventStatus, rotationAssignments, updateRotationAssignment, users } = useVrcBarApp();
   const [activeTab, setActiveTab] = useState<RotationNumber>(1);
   const [showConfirm, setShowConfirm] = useState<EventStatus | null>(null);
   const [toastMessage, setToastMessage] = useState<string | null>(null);

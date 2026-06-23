@@ -1,10 +1,10 @@
 import React from 'react';
 import { Gift, Sparkles, Ticket, Trophy } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 
 export function GuestLotteryPage() {
-  const { lotteryItems, lotteryEntries, currentUser, enterLottery, customerStamps } = useMockApp();
+  const { lotteryItems, lotteryEntries, currentUser, enterLottery, customerStamps } = useVrcBarApp();
   const [message, setMessage] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const openItems = (lotteryItems || []).filter(item => item.status === 'open' && !item.isDeleted);

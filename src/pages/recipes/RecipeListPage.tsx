@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { canShowRecipeForProduct } from '../../lib/orderUtils';
 
 export function RecipeListPage() {
-  const { products } = useMockApp();
+  const { products } = useVrcBarApp();
   const [searchParams] = useSearchParams();
   const [expanded, setExpanded] = useState<string | null>(null);
   const selectedProductId = searchParams.get('product');

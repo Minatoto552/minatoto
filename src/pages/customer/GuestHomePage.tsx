@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ArrowRight, BellRing, BookOpen, Star, Ticket, UserCircle, Users, Wine, type LucideIcon } from 'lucide-react';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 import { cn } from '../../lib/utils';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { getRotationLabel, usePlacements } from '../../hooks/usePlacements';
 
 export function GuestHomePage() {
@@ -13,7 +13,7 @@ export function GuestHomePage() {
     announcements,
     products,
     customerStamps,
-  } = useMockApp();
+  } = useVrcBarApp();
   const { currentCastPlacements } = usePlacements();
 
   const activeAnnouncements = announcements.filter(announcement =>

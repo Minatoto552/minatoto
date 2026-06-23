@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Wine, ArrowLeft, Loader2 } from 'lucide-react';
 
 export function GuestLoginPage() {
-  const { login, isAuthReady } = useMockApp();
+  const { login, isAuthReady } = useVrcBarApp();
   const navigate = useNavigate();
   const [loginId, setLoginId] = useState('');
   const [password, setPassword] = useState('');

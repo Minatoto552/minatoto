@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useMockApp, AnnouncementTarget, RepeatType, AnnouncementType } from '../../lib/MockAppContext';
+import { useVrcBarApp, AnnouncementTarget, RepeatType, AnnouncementType } from '../../lib/VrcBarAppContext';
 import { cn } from '../../lib/utils';
 import { Clock, Plus, Trash2 } from 'lucide-react';
 
 export function TimedAnnouncementManagerPage() {
-  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useMockApp();
+  const { announcements, addAnnouncement, updateAnnouncement, deleteAnnouncement } = useVrcBarApp();
   const scheduledAnnouncements = announcements.filter(a => a.announcementMode === 'scheduled');
   
   const [isCreating, setIsCreating] = useState(false);

@@ -1,10 +1,10 @@
 import React from 'react';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { Home, Loader2, LogOut, ShieldAlert } from 'lucide-react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 
 export function ProtectedRoute({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) {
-  const { currentUser, logout, isAuthReady, isProfileLoading, profileError } = useMockApp();
+  const { currentUser, logout, isAuthReady, isProfileLoading, profileError } = useVrcBarApp();
   const navigate = useNavigate();
   const location = useLocation();
   const loginPath = location.pathname.startsWith('/guest') ? '/guest-login' : '/login';

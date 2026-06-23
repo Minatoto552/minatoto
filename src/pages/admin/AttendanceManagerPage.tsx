@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from 'react';
 import {
-  useMockApp,
+  useVrcBarApp,
   AttendanceRequest,
   ShiftRequest,
-} from '../../lib/MockAppContext';
+} from '../../lib/VrcBarAppContext';
 import { getBusinessDate, cn } from '../../lib/utils';
 import {
   Calendar as CalendarIcon,
@@ -20,7 +20,7 @@ import {
 type ShiftStatus = 'open' | 'closed' | 'canceled';
 
 export function AttendanceManagerPage() {
-  const app = useMockApp() as any;
+  const app = useVrcBarApp() as any;
 
   const {
     users = [],
@@ -224,7 +224,7 @@ export function AttendanceManagerPage() {
   const handlePublishShift = async (id: string) => {
     if (!publishShiftRequest) {
       alert(
-        '公開機能がまだ接続されていません。MockAppContext.tsx に publishShiftRequest を追加してください。'
+        '公開機能がまだ接続されていません。VrcBarAppContext.tsx に publishShiftRequest を追加してください。'
       );
       return;
     }
@@ -270,7 +270,7 @@ export function AttendanceManagerPage() {
   const handleUnpublishShift = async (id: string) => {
     if (!unpublishShiftRequest) {
       alert(
-        '公開解除機能がまだ接続されていません。MockAppContext.tsx に unpublishShiftRequest を追加してください。'
+        '公開解除機能がまだ接続されていません。VrcBarAppContext.tsx に unpublishShiftRequest を追加してください。'
       );
       return;
     }

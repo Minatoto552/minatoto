@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useMockApp, HistoryResetLog } from '../../lib/MockAppContext';
+import { useVrcBarApp, HistoryResetLog } from '../../lib/VrcBarAppContext';
 import { Database, AlertTriangle, ShieldAlert, History, ChevronLeft, Trash2, Calendar, CheckCircle2, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function DataMaintenancePage() {
-  const { resetHistory, historyResetLogs, orders, announcements, emergencyCalls, rotationStatusHistory, users } = useMockApp();
+  const { resetHistory, historyResetLogs, orders, announcements, emergencyCalls, rotationStatusHistory, users } = useVrcBarApp();
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isResetting, setIsResetting] = useState(false);
   const [resetOptions, setResetOptions] = useState<{

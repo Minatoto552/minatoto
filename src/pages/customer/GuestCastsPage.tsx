@@ -1,12 +1,12 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Users } from 'lucide-react';
 import { cn, getBusinessDate } from '../../lib/utils';
 import { RotationLabel } from '../../components/ui/RotationLabel';
 import { ProfileAvatar } from '../../components/ui/ProfileAvatar';
 
 export function GuestCastsPage() {
-  const { users, rotationAssignments, getCastCurrentTable, eventStatus, currentRotationNumber, attendanceRequests, shiftRequests } = useMockApp();
+  const { users, rotationAssignments, getCastCurrentTable, eventStatus, currentRotationNumber, attendanceRequests, shiftRequests } = useVrcBarApp();
 
   const isEventOpen = eventStatus !== 'closed';
 

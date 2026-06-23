@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { BellRing, LogOut, Wine } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { getCustomerNavigation } from '../../hooks/useRoleNavigation';
 import { getRotationLabel } from '../../hooks/usePlacements';
 import { EmergencyCallNotification } from '../ui/EmergencyCallNotification';
@@ -12,7 +12,7 @@ import { ProfileAvatar } from '../ui/ProfileAvatar';
 import { AppleBarScene } from '../visual/AppleBarScene';
 
 export function CustomerLayout() {
-  const { currentUser, logout, currentRotationNumber, announcements } = useMockApp();
+  const { currentUser, logout, currentRotationNumber, announcements } = useVrcBarApp();
   const navigate = useNavigate();
   const navItems = getCustomerNavigation();
 

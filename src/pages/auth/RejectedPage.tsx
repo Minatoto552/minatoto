@@ -1,9 +1,9 @@
 import React from 'react';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { ShieldAlert, LogOut } from 'lucide-react';
 
 export function RejectedPage() {
-  const { logout } = useMockApp();
+  const { logout } = useVrcBarApp();
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[60vh] p-4 text-center animate-in fade-in duration-500">

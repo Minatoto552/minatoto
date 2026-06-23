@@ -1,4 +1,4 @@
-import type { OrderItem, Product } from './MockAppContext';
+import type { OrderItem, Product } from './VrcBarAppContext';
 
 export const NORMAL_COCKTAIL_COLORS = [
   { value: '赤', label: '赤', className: 'border-red-400/60 bg-red-500/18 text-red-100 shadow-[0_0_20px_rgba(239,68,68,0.18)]' },

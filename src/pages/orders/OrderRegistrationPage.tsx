@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen, CheckCircle2, MessageSquare, Minus, Palette, Plus, Search, ShieldAlert, ShoppingBag, Sparkles, Trash2, Wine, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { TABLES, useMockApp, type OrderItem } from '../../lib/MockAppContext';
+import { TABLES, useVrcBarApp, type OrderItem } from '../../lib/VrcBarAppContext';
 import {
   NORMAL_COCKTAIL_COLORS,
   NORMAL_COCKTAIL_COLOR_VALUES,
@@ -47,8 +47,8 @@ const normalizeColorPair = (colors: NormalCocktailColor[]) => {
   return [...colors].sort((a, b) => NORMAL_COCKTAIL_COLOR_VALUES.indexOf(a) - NORMAL_COCKTAIL_COLOR_VALUES.indexOf(b));
 };
 
-export function CustomerOrderPage() {
-  const { products, addOrder, currentUser } = useMockApp();
+export function OrderRegistrationPage() {
+  const { products, addOrder, currentUser } = useVrcBarApp();
   const [cart, setCart] = React.useState<Record<string, number>>({});
   const [searchTerm, setSearchTerm] = React.useState('');
   const [activeCategory, setActiveCategory] = React.useState<string>('通常カクテル');

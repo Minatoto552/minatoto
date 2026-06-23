@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Wine, ArrowLeft, Loader2 } from 'lucide-react';
 
 export function GuestRegisterPage() {
-  const { register, isAuthReady } = useMockApp();
+  const { register, isAuthReady } = useVrcBarApp();
   const navigate = useNavigate();
   const [isSubmitting, setIsSubmitting] = useState(false);
 

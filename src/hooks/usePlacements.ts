@@ -2,12 +2,12 @@ import { useMemo } from 'react';
 import {
   TABLES,
   STAFF_TASK_LABELS,
-  useMockApp,
+  useVrcBarApp,
   type EventStatus,
   type RotationNumber,
   type StaffTaskType,
   type UserProfile,
-} from '../lib/MockAppContext';
+} from '../lib/VrcBarAppContext';
 
 export type PlacementType = 'cast' | 'staff';
 export type PlacementStatus = 'active' | 'break' | 'finished';
@@ -74,7 +74,7 @@ export function usePlacements(selectedRotation?: RotationNumber) {
     staffTasks,
     currentRotationNumber,
     eventStatus,
-  } = useMockApp();
+  } = useVrcBarApp();
 
   const activeRotation = selectedRotation ?? currentRotationNumber ?? eventStatusToRotation(eventStatus) ?? 0;
   const activeEventStatus = rotationToEventStatus(activeRotation);

@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { CalendarCheck, CheckCircle2, Clock, Edit3, Send, UserRound } from 'lucide-react';
 import { cn, formatDateTime, getBusinessDate } from '../../lib/utils';
-import { useMockApp, type AttendanceRequest, type ShiftRequest } from '../../lib/MockAppContext';
+import { useVrcBarApp, type AttendanceRequest, type ShiftRequest } from '../../lib/VrcBarAppContext';
 
 const STATUS_OPTIONS: { value: AttendanceRequest['status']; label: string; hint: string }[] = [
   { value: 'present', label: '出勤', hint: '通常出勤' },
@@ -23,7 +23,7 @@ export function AttendanceRequestPage() {
     shiftRequests,
     attendanceRequests,
     submitAttendanceRequest,
-  } = useMockApp();
+  } = useVrcBarApp();
 
   const [selectedShiftId, setSelectedShiftId] = useState('');
   const [status, setStatus] = useState<AttendanceRequest['status']>('present');

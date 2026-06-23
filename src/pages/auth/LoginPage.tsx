@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { useMockApp } from '../../lib/MockAppContext';
+import { useVrcBarApp } from '../../lib/VrcBarAppContext';
 import { Wine, Lock, User } from 'lucide-react';
 
 export function LoginPage() {
@@ -8,7 +8,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, hasSeenOpening } = useMockApp();
+  const { login, hasSeenOpening } = useVrcBarApp();
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {

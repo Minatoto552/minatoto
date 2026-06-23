@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { useMockApp, UserRole, ApprovalStatus } from '../../lib/MockAppContext';
+import { useVrcBarApp, UserRole, ApprovalStatus } from '../../lib/VrcBarAppContext';
 import { Check, X, Unlock, Trash2, Undo, RefreshCw } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useDraggableScroll } from '../../hooks/useDraggableScroll';
 
 export function UserManagerPage() {
-  const { users, currentUser, updateUserPermission, deleteUser, restoreUser, hardDeleteUser, userDeleteLogs } = useMockApp();
+  const { users, currentUser, updateUserPermission, deleteUser, restoreUser, hardDeleteUser, userDeleteLogs } = useVrcBarApp();
   const [activeSubTab, setActiveSubTab] = useState<'pending' | 'active' | 'deleted' | 'logs'>('pending');
   const scrollRef = useDraggableScroll<HTMLDivElement>();
   const [deleteConfirmUser, setDeleteConfirmUser] = useState<string | null>(null);

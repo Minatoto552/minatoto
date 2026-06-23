@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useMockApp, CATEGORIES, Product } from '../../lib/MockAppContext';
+import { useVrcBarApp, CATEGORIES, Product } from '../../lib/VrcBarAppContext';
 import { BookOpen, Plus, Edit2, Trash2, Eye, EyeOff, Save, Search, X, Star } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function MenuEditorPage() {
-  const { products, addProduct, updateProduct, deleteProduct, users, currentUser } = useMockApp();
+  const { products, addProduct, updateProduct, deleteProduct, users, currentUser } = useVrcBarApp();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState<string | null>(null);

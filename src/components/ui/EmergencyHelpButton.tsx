@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { useMockApp, TABLES } from '../../lib/MockAppContext';
+import { useVrcBarApp, TABLES } from '../../lib/VrcBarAppContext';
 import { AlertTriangle, Send, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
 
 export function EmergencyHelpButton() {
-  const { currentUser, currentRotationNumber, triggerEmergencyCall, getCastCurrentTable, emergencyCalls } = useMockApp();
+  const { currentUser, currentRotationNumber, triggerEmergencyCall, getCastCurrentTable, emergencyCalls } = useVrcBarApp();
   const [isOpen, setIsOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [selectedTable, setSelectedTable] = useState('');

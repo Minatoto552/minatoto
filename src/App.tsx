@@ -1,12 +1,12 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { MockAppProvider } from './lib/MockAppContext';
+import { VrcBarAppProvider } from './lib/VrcBarAppContext';
 import { AppLayout } from './components/layout/AppLayout';
 import { CustomerLayout } from './components/layout/CustomerLayout';
 import { LandingPage } from './pages/customer/LandingPage';
-import { DashboardHome } from './pages/customer/DashboardHome';
-import { CustomerOrderPage } from './pages/customer/OrderPage';
-import { StaffDashboardPage } from './pages/staff/DashboardPage';
+import { RoleDashboardPage } from './pages/home/RoleDashboardPage';
+import { OrderRegistrationPage } from './pages/orders/OrderRegistrationPage';
+import { StaffOperationsPage } from './pages/staff/StaffOperationsPage';
 import { AdminPage } from './pages/admin/AdminPage';
 import { LoginPage } from './pages/auth/LoginPage';
 import { RegisterPage } from './pages/auth/RegisterPage';
@@ -16,9 +16,9 @@ import { RejectedPage } from './pages/auth/RejectedPage';
 import { DeletedPage } from './pages/auth/DeletedPage';
 import { ProfilePage } from './pages/auth/ProfilePage';
 import { ProtectedRoute } from './components/auth/ProtectedRoute';
-import { PublicPlacementView } from './pages/customer/PublicPlacementView';
-import { RecipeListPage } from './pages/customer/RecipeListPage';
-import { AnnouncementsPage } from './pages/customer/AnnouncementsPage';
+import { PlacementBoardPage } from './pages/placements/PlacementBoardPage';
+import { RecipeListPage } from './pages/recipes/RecipeListPage';
+import { AnnouncementsPage } from './pages/announcements/AnnouncementsPage';
 import { DataMaintenancePage } from './pages/admin/DataMaintenancePage';
 import { MemberManagerPage } from './pages/admin/MemberManagerPage';
 
@@ -38,7 +38,7 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 export default function App() {
   return (
     <ErrorBoundary>
-      <MockAppProvider>
+      <VrcBarAppProvider>
         <BrowserRouter>
           <Routes>
           <Route path="/" element={<LandingPage />} />
@@ -52,7 +52,7 @@ export default function App() {
             <Route index element={<GuestHomePage />} />
             <Route path="casts" element={<GuestCastsPage />} />
             <Route path="menu" element={<GuestMenuPage />} />
-            <Route path="order" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><CustomerOrderPage /></ProtectedRoute>} />
+            <Route path="order" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><OrderRegistrationPage /></ProtectedRoute>} />
             <Route path="lottery" element={<GuestLotteryPage />} />
             <Route path="game" element={<GuestGamePage />} />
             <Route path="point" element={<GuestPointPage />} />
@@ -60,11 +60,11 @@ export default function App() {
           </Route>
           
           <Route path="/app" element={<AppLayout />}>
-            <Route index element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><DashboardHome /></ProtectedRoute>} />
-            <Route path="order" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><CustomerOrderPage /></ProtectedRoute>} />
+            <Route index element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><RoleDashboardPage /></ProtectedRoute>} />
+            <Route path="order" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><OrderRegistrationPage /></ProtectedRoute>} />
             <Route path="announcements" element={<ProtectedRoute><AnnouncementsPage /></ProtectedRoute>} />
             <Route path="maintenance" element={<ProtectedRoute allowedRoles={['admin']}><DataMaintenancePage /></ProtectedRoute>} />
-            <Route path="placement" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><PublicPlacementView /></ProtectedRoute>} />
+            <Route path="placement" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><PlacementBoardPage /></ProtectedRoute>} />
             <Route path="recipes" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><RecipeListPage /></ProtectedRoute>} />
             <Route path="members" element={<ProtectedRoute allowedRoles={['admin']}><MemberManagerPage /></ProtectedRoute>} />
             <Route path="profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
@@ -72,7 +72,7 @@ export default function App() {
             <Route path="rejected" element={<ProtectedRoute><RejectedPage /></ProtectedRoute>} />
             <Route path="deleted" element={<ProtectedRoute><DeletedPage /></ProtectedRoute>} />
             <Route path="attendance" element={<ProtectedRoute allowedRoles={['admin', 'staff', 'cast']}><AttendanceRequestPage /></ProtectedRoute>} />
-            <Route path="staff" element={<ProtectedRoute allowedRoles={['staff', 'cast', 'admin']}><StaffDashboardPage /></ProtectedRoute>} />
+            <Route path="staff" element={<ProtectedRoute allowedRoles={['staff', 'cast', 'admin']}><StaffOperationsPage /></ProtectedRoute>} />
             <Route path="admin" element={<ProtectedRoute allowedRoles={['admin']}><AdminPage /></ProtectedRoute>} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
@@ -80,7 +80,7 @@ export default function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         </BrowserRouter>
-      </MockAppProvider>
+      </VrcBarAppProvider>
     </ErrorBoundary>
   );
 }
