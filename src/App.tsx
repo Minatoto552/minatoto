@@ -35,11 +35,15 @@ import { AttendanceRequestPage } from './pages/staff/AttendanceRequestPage';
 
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+const routerBasename = import.meta.env.BASE_URL === '/'
+  ? undefined
+  : import.meta.env.BASE_URL.replace(/\/$/, '');
+
 export default function App() {
   return (
     <ErrorBoundary>
       <VrcBarAppProvider>
-        <BrowserRouter>
+        <BrowserRouter basename={routerBasename}>
           <Routes>
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
